@@ -1,0 +1,330 @@
+// MTB Annual Maintenance Cost Calculator — interactive mockup
+// Each slider is a cost "dial" within Jon's stated range/default.
+// Items marked with * had no stated service interval in the spec and default to annual (24mo for pivot bearings).
+// Total annualized cost = sum of (line item cost / service interval in years).
+
+import React, { useState, useMemo } from 'react';
+
+const displayFont = { fontFamily: "'Space Grotesk', system-ui, sans-serif" };
+const monoFont = { fontFamily: "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace" };
+
+const DEFAULTS = {
+  frontSusp: 135,
+  rearSusp: 150,
+  dropper: 75,
+  pivotBearings: 150,
+  chain: 75,
+  cassette: 175,
+  chainring: 45,
+  batteryOn: false,
+  chainLube: 50,
+  sealant: 50,
+  ancillary: 50,
+};
+
+const RANGES = {
+  frontSusp: [110, 165],
+  rearSusp: [130, 200],
+  dropper: [50, 100],
+  pivotBearings: [50, 260],
+  chain: [50, 100],
+  cassette: [75, 500],
+  chainring: [20, 100],
+  chainLube: [30, 100],
+  sealant: [25, 100],
+  ancillary: [10, 500],
+};
+
+// Gauge bounds calibrated to the actual min/max possible totals across all dials (~$449–$1653/yr)
+const GAUGE_MIN = 400;
+const GAUGE_MAX = 1700;
+const ZONES = [
+  { from: 0, to: 0.4, color: '#0E7490' },
+  { from: 0.4, to: 0.75, color: '#D97706' },
+  { from: 0.75, to: 1, color: '#DC2626' },
+];
+
+function polarToCartesian(cx, cy, r, angleDeg) {
+  const rad = (angleDeg * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) };
+}
+
+function arcPath(cx, cy, r, startAngle, endAngle, steps = 32) {
+  let d = '';
+  for (let i = 0; i <= steps; i++) {
+    const angle = startAngle + ((endAngle - startAngle) * i) / steps;
+    const { x, y } = polarToCartesian(cx, cy, r, angle);
+    d += `${i === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)} `;
+  }
+  return d.trim();
+}
+
+function Gauge({ value }) {
+  const cx = 100, cy = 96, r = 72;
+  const t = Math.min(1, Math.max(0, (value - GAUGE_MIN) / (GAUGE_MAX - GAUGE_MIN)));
+  const angleAt = (tt) => 180 - 180 * tt;
+  const needleAngle = angleAt(t);
+  const needleTip = polarToCartesian(cx, cy, r - 16, needleAngle);
+
+  return (
+    <div>
+      <svg viewBox="0 0 200 118" className="w-full">
+        <path d={arcPath(cx, cy, r, 180, 0)} fill="none" stroke="#E4E4E7" strokeWidth="14" strokeLinecap="round" />
+        {ZONES.map((z, i) => {
+          const segEnd = Math.min(z.to, t);
+          if (segEnd <= z.from) return null;
+          return (
+            <path
+              key={i}
+              d={arcPath(cx, cy, r, angleAt(z.from), angleAt(segEnd))}
+              fill="none"
+              stroke={z.color}
+              strokeWidth="14"
+              strokeLinecap="round"
+            />
+          );
+        })}
+        {[0, 0.25, 0.5, 0.75, 1].map((tt, i) => {
+          const tickAngle = angleAt(tt);
+          const p1 = polarToCartesian(cx, cy, r - 10, tickAngle);
+          const p2 = polarToCartesian(cx, cy, r + 10, tickAngle);
+          return <line key={i} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke="#A1A1AA" strokeWidth="2" />;
+        })}
+        <line x1={cx} y1={cy} x2={needleTip.x} y2={needleTip.y} stroke="#18181B" strokeWidth="3" strokeLinecap="round" />
+        <circle cx={cx} cy={cy} r="7" fill="#18181B" />
+      </svg>
+      <div className="flex justify-between px-2 -mt-3 text-xs uppercase tracking-wide text-zinc-400" style={monoFont}>
+        <span>Budget</span>
+        <span>Typical</span>
+        <span>Premium</span>
+      </div>
+    </div>
+  );
+}
+
+function IntervalBadge({ label, assumed }) {
+  return (
+    <span
+      className="inline-block text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded border border-dashed border-cyan-700 text-cyan-700 shrink-0"
+      style={monoFont}
+    >
+      {label}{assumed ? '*' : ''}
+    </span>
+  );
+}
+
+function Slider({ id, label, value, onChange, min, max, intervalLabel, assumed, annualized }) {
+  return (
+    <div className="py-4">
+      <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+        <div className="flex items-center gap-2 min-w-0">
+          <label htmlFor={id} className="text-sm font-medium text-zinc-700">{label}</label>
+          <IntervalBadge label={intervalLabel} assumed={assumed} />
+        </div>
+        <span className="text-base font-semibold text-zinc-900 tabular-nums shrink-0" style={monoFont}>${value}</span>
+      </div>
+      <input
+        id={id}
+        type="range"
+        min={min}
+        max={max}
+        step={5}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="w-full"
+      />
+      <div className="flex justify-between text-xs text-zinc-400 mt-1" style={monoFont}>
+        <span>${min}</span>
+        <span>${annualized.toFixed(0)}/yr equiv.</span>
+        <span>${max}</span>
+      </div>
+    </div>
+  );
+}
+
+function SectionCard({ title, subtitle, children, total }) {
+  return (
+    <div className="bg-white rounded-2xl border border-zinc-200 p-5 shadow-sm">
+      <div className="flex items-baseline justify-between mb-1">
+        <h2 className="text-base font-semibold text-zinc-800" style={displayFont}>{title}</h2>
+        <span className="text-sm font-semibold tabular-nums text-cyan-700" style={monoFont}>${total.toFixed(0)}/yr</span>
+      </div>
+      {subtitle && <p className="text-xs text-zinc-400 mb-1">{subtitle}</p>}
+      <div className="divide-y divide-zinc-100">{children}</div>
+    </div>
+  );
+}
+
+function BreakdownBar({ items, total }) {
+  return (
+    <div className="bg-white rounded-2xl border border-zinc-200 p-5 mb-6 shadow-sm">
+      <h2 className="text-base font-semibold text-zinc-800 mb-3" style={displayFont}>Where it goes</h2>
+      <div className="flex w-full h-2.5 rounded-full overflow-hidden mb-3 bg-zinc-100">
+        {items.map((it, i) => (
+          <div key={i} className={it.barClass} style={{ width: `${total > 0 ? (it.value / total) * 100 : 0}%` }} />
+        ))}
+      </div>
+      <div className="grid grid-cols-2 gap-y-2 gap-x-4">
+        {items.map((it, i) => (
+          <div key={i} className="flex items-center gap-2 text-xs">
+            <span className={`w-2 h-2 rounded-full shrink-0 ${it.dotClass}`} />
+            <span className="text-zinc-500">{it.name}</span>
+            <span className="ml-auto font-semibold text-zinc-700 tabular-nums" style={monoFont}>${it.value.toFixed(0)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function MtbMaintenanceCalculator() {
+  const [v, setV] = useState(DEFAULTS);
+  const set = (key) => (val) => setV((prev) => ({ ...prev, [key]: val }));
+
+  const ann = useMemo(() => ({
+    frontSusp: v.frontSusp / 1,
+    rearSusp: v.rearSusp / 1,
+    dropper: v.dropper / 1,
+    pivotBearings: v.pivotBearings / 2,
+    chain: v.chain / 2,
+    cassette: v.cassette / 2,
+    chainring: v.chainring / 3,
+    battery: v.batteryOn ? 25 : 0,
+    chainLube: v.chainLube / 1,
+    sealant: v.sealant / 1,
+    ancillary: v.ancillary / 1,
+  }), [v]);
+
+  const suspensionTotal = ann.frontSusp + ann.rearSusp + ann.dropper + ann.pivotBearings;
+  const drivetrainTotal = ann.chain + ann.cassette + ann.chainring + ann.battery;
+  const ongoingTotal = ann.chainLube + ann.sealant;
+  const ancillaryTotal = ann.ancillary;
+  const grandTotal = suspensionTotal + drivetrainTotal + ongoingTotal + ancillaryTotal;
+
+  const breakdownItems = [
+    { name: 'Suspension', value: suspensionTotal, barClass: 'bg-cyan-700', dotClass: 'bg-cyan-700' },
+    { name: 'Drivetrain', value: drivetrainTotal, barClass: 'bg-cyan-500', dotClass: 'bg-cyan-500' },
+    { name: 'Ongoing', value: ongoingTotal, barClass: 'bg-zinc-400', dotClass: 'bg-zinc-400' },
+    { name: 'Ancillary', value: ancillaryTotal, barClass: 'bg-zinc-300', dotClass: 'bg-zinc-300' },
+  ];
+
+  const reset = () => setV(DEFAULTS);
+
+  return (
+    <div className="min-h-screen bg-zinc-50 py-8 px-4">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap');
+        input[type=range] {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 100%;
+          background: transparent;
+          cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+          height: 5px;
+          border-radius: 999px;
+          background: #E4E4E7;
+        }
+        input[type=range]::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 16px;
+          height: 16px;
+          border-radius: 4px;
+          background: #18181B;
+          border: 2px solid #FFFFFF;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+          margin-top: -5.5px;
+          cursor: pointer;
+        }
+        input[type=range]::-moz-range-track {
+          height: 5px;
+          border-radius: 999px;
+          background: #E4E4E7;
+        }
+        input[type=range]::-moz-range-thumb {
+          width: 16px;
+          height: 16px;
+          border-radius: 4px;
+          background: #18181B;
+          border: 2px solid #FFFFFF;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+          cursor: pointer;
+        }
+      `}</style>
+
+      <div className="max-w-md mx-auto">
+        <div className="mb-6">
+          <p className="text-xs uppercase tracking-widest text-cyan-700 font-semibold mb-1" style={monoFont}>
+            Post Millennium Renaissance — Mockup
+          </p>
+          <h1 className="text-2xl font-bold text-zinc-900" style={displayFont}>MTB Annual Maintenance Cost</h1>
+          <p className="text-sm text-zinc-500 mt-1">Dial in each line item below to estimate your yearly spend.</p>
+        </div>
+
+        <div className="bg-white rounded-3xl border border-zinc-200 p-6 mb-6 shadow-sm">
+          <Gauge value={grandTotal} />
+          <div className="text-center mt-1">
+            <div className="text-4xl font-bold text-zinc-900 tabular-nums" style={monoFont}>
+              ${grandTotal.toFixed(0)}<span className="text-base font-medium text-zinc-400 ml-1">/yr</span>
+            </div>
+            <div className="text-sm text-zinc-400 mt-0.5" style={monoFont}>≈ ${(grandTotal / 12).toFixed(0)}/mo</div>
+          </div>
+        </div>
+
+        <BreakdownBar items={breakdownItems} total={grandTotal} />
+
+        <div className="space-y-4">
+          <SectionCard title="Suspension & Pivots" subtitle="Service intervals assumed — see note below" total={suspensionTotal}>
+            <Slider id="frontSusp" label="Front suspension service" value={v.frontSusp} onChange={set('frontSusp')} min={RANGES.frontSusp[0]} max={RANGES.frontSusp[1]} intervalLabel="Annual" assumed annualized={ann.frontSusp} />
+            <Slider id="rearSusp" label="Rear suspension service" value={v.rearSusp} onChange={set('rearSusp')} min={RANGES.rearSusp[0]} max={RANGES.rearSusp[1]} intervalLabel="Annual" assumed annualized={ann.rearSusp} />
+            <Slider id="dropper" label="Dropper service" value={v.dropper} onChange={set('dropper')} min={RANGES.dropper[0]} max={RANGES.dropper[1]} intervalLabel="Annual" assumed annualized={ann.dropper} />
+            <Slider id="pivotBearings" label="Suspension pivot bearings" value={v.pivotBearings} onChange={set('pivotBearings')} min={RANGES.pivotBearings[0]} max={RANGES.pivotBearings[1]} intervalLabel="24 mo" assumed annualized={ann.pivotBearings} />
+          </SectionCard>
+
+          <SectionCard title="Drivetrain" total={drivetrainTotal}>
+            <Slider id="chain" label="Chain" value={v.chain} onChange={set('chain')} min={RANGES.chain[0]} max={RANGES.chain[1]} intervalLabel="24 mo" annualized={ann.chain} />
+            <Slider id="cassette" label="Cassette" value={v.cassette} onChange={set('cassette')} min={RANGES.cassette[0]} max={RANGES.cassette[1]} intervalLabel="24 mo" annualized={ann.cassette} />
+            <Slider id="chainring" label="Chainring" value={v.chainring} onChange={set('chainring')} min={RANGES.chainring[0]} max={RANGES.chainring[1]} intervalLabel="36 mo" annualized={ann.chainring} />
+            <div className="flex items-center justify-between py-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-zinc-700">Battery wear & tear</span>
+                <span
+                  className="inline-block text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded border border-dashed border-cyan-700 text-cyan-700"
+                  style={monoFont}
+                >
+                  E-bike
+                </span>
+              </div>
+              <button
+                onClick={() => set('batteryOn')(!v.batteryOn)}
+                aria-pressed={v.batteryOn}
+                className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${v.batteryOn ? 'bg-cyan-700' : 'bg-zinc-200'}`}
+              >
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${v.batteryOn ? 'translate-x-5' : ''}`} />
+              </button>
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Ongoing Consumables" total={ongoingTotal}>
+            <Slider id="chainLube" label="Chain lube or wax" value={v.chainLube} onChange={set('chainLube')} min={RANGES.chainLube[0]} max={RANGES.chainLube[1]} intervalLabel="Annual" annualized={ann.chainLube} />
+            <Slider id="sealant" label="Tubeless sealant" value={v.sealant} onChange={set('sealant')} min={RANGES.sealant[0]} max={RANGES.sealant[1]} intervalLabel="Annual" assumed annualized={ann.sealant} />
+          </SectionCard>
+
+          <SectionCard title="Ancillary" subtitle="Tire plugs, quick links, UDH, etc." total={ancillaryTotal}>
+            <Slider id="ancillary" label="Incidentals budget" value={v.ancillary} onChange={set('ancillary')} min={RANGES.ancillary[0]} max={RANGES.ancillary[1]} intervalLabel="Annual" assumed annualized={ann.ancillary} />
+          </SectionCard>
+        </div>
+
+        <button onClick={reset} className="w-full mt-5 py-3 rounded-xl border border-zinc-300 text-zinc-600 text-sm font-medium hover:bg-zinc-100 transition-colors">
+          Reset to defaults
+        </button>
+
+        <p className="text-xs text-zinc-400 mt-4 leading-relaxed">
+          * Interval wasn't specified in the original spec — defaulted to annual (24 months for pivot bearings). Every number and interval here is a placeholder for discussion.
+        </p>
+      </div>
+    </div>
+  );
+}
