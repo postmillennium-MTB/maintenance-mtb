@@ -1,555 +1,479 @@
-import { useState, useMemo } from "react";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MTB Annual Maintenance Cost — Post Millennium Renaissance</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#FAFAFA;font-family:'Space Grotesk',system-ui,sans-serif;color:#18181B;-webkit-font-smoothing:antialiased}
+.wrap{max-width:30rem;margin:0 auto;padding:2rem 1rem}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.15em;color:#0E7490;font-weight:600;margin-bottom:.2rem}
+h1{font-size:1.5rem;font-weight:700}
+.sub-head{font-size:.875rem;color:#71717A;margin-top:.25rem;margin-bottom:1.5rem}
+.card{background:#fff;border:1px solid #E4E4E7;border-radius:1rem;padding:1.25rem;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:1rem}
+.gauge-card{border-radius:1.5rem;padding:1.5rem}
+#gauge-svg{width:100%}
+.gauge-labels{display:flex;justify-content:space-between;padding:0 .5rem;margin-top:-.5rem;font-family:'JetBrains Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.04em;color:#A1A1AA}
+.big-total{text-align:center;margin-top:.25rem}
+.big-num{font-family:'JetBrains Mono',monospace;font-size:2.25rem;font-weight:700;font-variant-numeric:tabular-nums}
+.big-num small{font-size:1rem;font-weight:500;color:#A1A1AA;margin-left:.25rem}
+.big-mo{font-family:'JetBrains Mono',monospace;font-size:.875rem;color:#A1A1AA;margin-top:.125rem}
+.bar-wrap{display:flex;height:10px;border-radius:999px;overflow:hidden;background:#F4F4F5;margin-bottom:.75rem}
+.bar-seg{height:100%;transition:width .2s}
+.legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem 1rem}
+.legend-item{display:flex;align-items:center;gap:.5rem;font-size:.75rem}
+.legend-dot{width:8px;height:8px;border-radius:999px;flex-shrink:0}
+.legend-name{color:#71717A}
+.legend-amt{margin-left:auto;font-family:'JetBrains Mono',monospace;font-weight:600;color:#3F3F46;font-variant-numeric:tabular-nums}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:.2rem}
+.section-title{font-size:1rem;font-weight:600;color:#3F3F46}
+.section-total{font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:600;color:#0E7490}
+.section-sub{font-size:.72rem;color:#A1A1AA;margin-bottom:.1rem}
+.divide>*+*{border-top:1px solid #F4F4F5}
+.item{padding:.875rem 0}
+.item-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.5rem;flex-wrap:wrap}
+.item-label-group{display:flex;align-items:center;gap:.5rem;min-width:0}
+.item-label{font-size:.875rem;font-weight:500;color:#3F3F46}
+.item-val{font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:600;color:#18181B;font-variant-numeric:tabular-nums;flex-shrink:0}
+.badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:.1rem .45rem;border-radius:.375rem;border:1px dashed #0E7490;color:#0E7490;flex-shrink:0;line-height:1.4}
+.badge-btn{background:#FAFAFA;border-style:solid;cursor:pointer}
+.badge-btn:hover{background:#E0F2FE}
+.ticks{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:.65rem;color:#A1A1AA;margin-top:.2rem}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:999px;background:#E4E4E7}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:4px;background:#18181B;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35);margin-top:-5.5px}
+input[type=range]::-moz-range-track{height:5px;border-radius:999px;background:#E4E4E7}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:4px;background:#18181B;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.toggle-row{display:flex;align-items:flex-start;justify-content:space-between;padding:.875rem 0;gap:.75rem}
+.toggle-text{min-width:0}
+.toggle-label-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem}
+.toggle-desc{font-size:.72rem;color:#A1A1AA;line-height:1.5}
+.toggle-amt{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:#0E7490;font-weight:600}
+.switch{position:relative;width:44px;height:24px;border-radius:999px;border:none;cursor:pointer;flex-shrink:0;background:#E4E4E7;transition:background .15s;margin-top:.125rem}
+.switch.on{background:#0E7490}
+.knob{position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:999px;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .15s;display:block;pointer-events:none}
+.switch.on .knob{transform:translateX(20px)}
+details.ws{background:#fff;border:1px solid #E4E4E7;border-radius:1rem;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:1rem;overflow:hidden}
+details.ws summary{display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer;list-style:none;user-select:none}
+details.ws summary::-webkit-details-marker{display:none}
+.chevron{font-size:1rem;color:#A1A1AA;transition:transform .2s;display:inline-block}
+details.ws[open] .chevron{transform:rotate(180deg)}
+.ws-body{padding:0 1.25rem 1.25rem}
+.ws-group{font-family:'JetBrains Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:#0E7490;font-weight:700;margin:.5rem 0 .25rem}
+.ws-divider{height:1px;background:#F4F4F5;margin:.5rem 0}
+.ws-result{margin-top:1rem;padding:1rem;background:#FAFAFA;border:1px solid #E4E4E7;border-radius:.75rem}
+.ws-result-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:.75rem}
+.ws-result-title{font-size:.8rem;font-weight:600;color:#3F3F46}
+.ws-miles{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:#A1A1AA}
+.ws-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.4rem}
+.ws-cell{text-align:center;padding:.5rem .2rem;background:#fff;border:1px solid #E4E4E7;border-radius:.5rem}
+.ws-num{display:block;font-family:'JetBrains Mono',monospace;font-size:1.25rem;font-weight:700;color:#0E7490}
+.ws-cap{display:block;font-size:.58rem;text-transform:uppercase;letter-spacing:.02em;color:#A1A1AA;margin-top:.1rem}
+.ws-apply{width:100%;margin-top:.75rem;padding:.625rem;border-radius:.5rem;border:none;background:#0E7490;color:#fff;font-size:.8rem;font-weight:600;font-family:'Space Grotesk',system-ui,sans-serif;cursor:pointer}
+.ws-apply:hover{background:#0C617A}
+.ws-note{font-size:.65rem;color:#A1A1AA;margin-top:.625rem;line-height:1.5}
+.sections{display:flex;flex-direction:column;gap:1rem}
+.reset-btn{width:100%;margin-top:1.25rem;padding:.75rem;border-radius:.75rem;border:1px solid #D4D4D8;background:#fff;color:#71717A;font-size:.875rem;font-weight:500;font-family:'Space Grotesk',system-ui,sans-serif;cursor:pointer}
+.reset-btn:hover{background:#F4F4F5}
+.footnote{font-size:.7rem;color:#A1A1AA;margin-top:1rem;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Post Millennium Renaissance</p>
+  <h1>MTB Annual Maintenance Cost</h1>
+  <p class="sub-head">Dial in each line item to estimate your yearly spend.</p>
 
-// ── Constants ──────────────────────────────────────────────────────────────
-const DEFAULTS = {
-  frontSusp: 135, rearSusp: 150, dropper: 75, pivotBearings: 150,
-  chain: 75, cassette: 175, chainring: 45, batteryOn: false,
-  chainInterval: 24, cassetteInterval: 24, chainringInterval: 36,
-  chainLube: 50, sealant: 50,
-  tireCost: 75, tireQty: 2,
-  padCost: 25, padQty: 2,
-  rotorCost: 50, rotorQty: 1,
-  ancillary: 50,
+  <!-- Gauge -->
+  <div class="card gauge-card">
+    <svg id="gauge-svg" viewBox="0 0 200 118">
+      <path id="g-track" fill="none" stroke="#E4E4E7" stroke-width="14" stroke-linecap="round"/>
+      <path id="g-z0" fill="none" stroke="#0E7490" stroke-width="14" stroke-linecap="round"/>
+      <path id="g-z1" fill="none" stroke="#D97706" stroke-width="14" stroke-linecap="round"/>
+      <path id="g-z2" fill="none" stroke="#DC2626" stroke-width="14" stroke-linecap="round"/>
+      <line id="g-t0" stroke="#A1A1AA" stroke-width="2"/>
+      <line id="g-t1" stroke="#A1A1AA" stroke-width="2"/>
+      <line id="g-t2" stroke="#A1A1AA" stroke-width="2"/>
+      <line id="g-t3" stroke="#A1A1AA" stroke-width="2"/>
+      <line id="g-t4" stroke="#A1A1AA" stroke-width="2"/>
+      <line id="g-needle" x1="100" y1="96" stroke="#18181B" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="100" cy="96" r="7" fill="#18181B"/>
+    </svg>
+    <div class="gauge-labels"><span>Budget</span><span>Typical</span><span>Premium</span></div>
+    <div class="big-total">
+      <div class="big-num" id="grand-total">$0<small>/yr</small></div>
+      <div class="big-mo" id="grand-mo">approx. $0/mo</div>
+    </div>
+  </div>
+
+  <!-- Breakdown -->
+  <div class="card">
+    <h2 class="section-title" style="margin-bottom:.75rem">Where it goes</h2>
+    <div class="bar-wrap">
+      <div class="bar-seg" id="bar-susp" style="background:#0E7490"></div>
+      <div class="bar-seg" id="bar-dt"   style="background:#06B6D4"></div>
+      <div class="bar-seg" id="bar-on"   style="background:#A1A1AA"></div>
+      <div class="bar-seg" id="bar-anc"  style="background:#D4D4D8"></div>
+    </div>
+    <div class="legend-grid">
+      <div class="legend-item"><span class="legend-dot" style="background:#0E7490"></span><span class="legend-name">Suspension</span><span class="legend-amt" id="leg-susp">$0</span></div>
+      <div class="legend-item"><span class="legend-dot" style="background:#06B6D4"></span><span class="legend-name">Drivetrain</span><span class="legend-amt" id="leg-dt">$0</span></div>
+      <div class="legend-item"><span class="legend-dot" style="background:#A1A1AA"></span><span class="legend-name">Ongoing</span><span class="legend-amt"  id="leg-on">$0</span></div>
+      <div class="legend-item"><span class="legend-dot" style="background:#D4D4D8"></span><span class="legend-name">Ancillary</span><span class="legend-amt" id="leg-anc">$0</span></div>
+    </div>
+  </div>
+
+  <!-- Ride Worksheet -->
+  <details class="ws">
+    <summary>
+      <div>
+        <div class="section-title">Ride Worksheet</div>
+        <div style="font-size:.72rem;color:#A1A1AA;margin-top:.1rem">Estimate replacements from how you actually ride</div>
+      </div>
+      <span class="chevron">&#9662;</span>
+    </summary>
+    <div class="ws-body">
+      <p class="ws-group">Cross-country / trail</p>
+      <div id="ws-xc"></div>
+      <div class="ws-divider"></div>
+      <p class="ws-group">Enduro / aggressive</p>
+      <div id="ws-end"></div>
+      <div class="ws-divider"></div>
+      <p class="ws-group">Bike park</p>
+      <div id="ws-park"></div>
+      <div class="ws-result">
+        <div class="ws-result-top">
+          <span class="ws-result-title">Suggested yearly replacements</span>
+          <span class="ws-miles" id="ws-miles">0 mi-equiv/yr</span>
+        </div>
+        <div class="ws-grid">
+          <div class="ws-cell"><span class="ws-num" id="ws-tires">-</span><span class="ws-cap">Tires</span></div>
+          <div class="ws-cell"><span class="ws-num" id="ws-pads">-</span><span class="ws-cap">Pad sets</span></div>
+          <div class="ws-cell"><span class="ws-num" id="ws-rotors">-</span><span class="ws-cap">Rotors</span></div>
+          <div class="ws-cell"><span class="ws-num" id="ws-chains">-</span><span class="ws-cap">Chains</span></div>
+          <div class="ws-cell"><span class="ws-num" id="ws-sealant">-</span><span class="ws-cap">Sealant</span></div>
+        </div>
+        <button class="ws-apply" id="btn-apply">Apply to dials above &#8593;</button>
+        <p class="ws-note">Ballpark only &#8212; based on ~800 mi rear tire life; bike-park days weighted heavier for braking and cornering load. Tune the dials yourself after applying.</p>
+      </div>
+    </div>
+  </details>
+
+  <!-- Sections (built by JS) -->
+  <div class="sections">
+    <div class="card" id="sec-susp"></div>
+    <div class="card" id="sec-dt"></div>
+    <div class="card" id="sec-on"></div>
+    <div class="card" id="sec-anc"></div>
+  </div>
+
+  <button class="reset-btn" id="btn-reset">Reset to defaults</button>
+  <p class="footnote">* Interval not specified in original spec &#8212; defaulted to annual (24 months for pivot bearings). All numbers are placeholders for discussion.</p>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+var D = {
+  frontSusp:135, rearSusp:150, dropper:75, pivotBearings:150,
+  chain:75, cassette:175, chainring:45, batteryOn:false,
+  chainInt:24, cassetteInt:24, chainringInt:36,
+  chainLube:50, sealant:50,
+  tireCost:75, tireQty:2,
+  padCost:25, padQty:2,
+  rotorCost:50, rotorQty:1,
+  ancillary:50,
+  xcRpw:3, xcMpr:12, endRpw:2, endMpr:8, parkDays:5
 };
+var S = Object.assign({}, D);
+var INT = [12, 24, 36];
+var GMIN=400, GMAX=2600;
+var ZONES=[{f:0,t:.4,c:'#0E7490'},{f:.4,t:.75,c:'#D97706'},{f:.75,t:1,c:'#DC2626'}];
 
-const RANGES = {
-  frontSusp: [110, 165], rearSusp: [130, 200], dropper: [50, 100],
-  pivotBearings: [50, 260], chain: [50, 100], cassette: [75, 500],
-  chainring: [20, 100], chainLube: [30, 100], sealant: [25, 100],
-  tireCost: [50, 110], padCost: [15, 50], rotorCost: [20, 100],
-  ancillary: [10, 500],
-};
-
-const INTERVAL_CYCLE = [12, 24, 36];
-const GAUGE_MIN = 400, GAUGE_MAX = 2600;
-const ZONES = [
-  { from: 0, to: 0.4,  color: "#0E7490" },
-  { from: 0.4, to: 0.75, color: "#D97706" },
-  { from: 0.75, to: 1,  color: "#DC2626" },
-];
-const SEASON_WEEKS = 30;
-
-const C = {
-  accent: "#0E7490", bright: "#06B6D4",
-  ink: "#18181B", inkSoft: "#3F3F46",
-  z700: "#3F3F46", z500: "#71717A", z400: "#A1A1AA",
-  z300: "#D4D4D8", z200: "#E4E4E7", z100: "#F4F4F5", z50: "#FAFAFA",
-};
-
-const FONT_DISPLAY = "'Space Grotesk', system-ui, sans-serif";
-const FONT_MONO   = "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace";
-
-// ── Wear model ─────────────────────────────────────────────────────────────
-function computeSuggestions(w) {
-  const trailMiles = (w.xcRpw * w.xcMpr + w.endRpw * w.endMpr) * SEASON_WEEKS;
-  const totalRpw   = w.xcRpw + w.endRpw;
-  const avgRide    = totalRpw > 0
-    ? (w.xcRpw * w.xcMpr + w.endRpw * w.endMpr) / totalRpw : 10;
-  const parkMiles  = w.parkDays * 3 * avgRide;
-
-  const tireMiles  = trailMiles + parkMiles * 1.6;
-  const tires      = Math.max(1, Math.round(tireMiles / 800 + tireMiles / 1600));
-
-  const padMiles   = trailMiles + parkMiles * 2.0;
-  const pads       = Math.max(1, Math.round((padMiles / 1000) * 2));
-
-  const rotorMiles = trailMiles + parkMiles * 1.5;
-  const rotors     = Math.max(0, Math.round((rotorMiles / 4000) * 2));
-
-  const sealant    = Math.max(2, Math.round(tireMiles / 1200));
-  const chains     = Math.max(1, Math.round(tireMiles / 2000));
-  const totalMiles = Math.round(trailMiles + parkMiles);
-
-  return { totalMiles, tires, pads, rotors, sealant, chains };
+// ── Gauge ──────────────────────────────────────────────────────────────────
+function polar(cx,cy,r,deg){
+  var rad=deg*Math.PI/180;
+  return [cx+r*Math.cos(rad), cy-r*Math.sin(rad)];
 }
-
-// ── SVG Gauge ──────────────────────────────────────────────────────────────
-function polar(cx, cy, r, deg) {
-  const rad = (deg * Math.PI) / 180;
-  return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) };
-}
-function arcPath(cx, cy, r, a0, a1, steps = 32) {
-  let d = "";
-  for (let i = 0; i <= steps; i++) {
-    const a = a0 + ((a1 - a0) * i) / steps;
-    const p = polar(cx, cy, r, a);
-    d += `${i === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)} `;
+function arc(cx,cy,r,a0,a1){
+  var d='', steps=32;
+  for(var i=0;i<=steps;i++){
+    var a=a0+(a1-a0)*i/steps, p=polar(cx,cy,r,a);
+    d+=(i===0?'M':'L')+' '+p[0].toFixed(2)+' '+p[1].toFixed(2)+' ';
   }
   return d.trim();
 }
+function angAt(t){ return 180-180*t; }
 
-function Gauge({ value }) {
-  const cx = 100, cy = 96, r = 72;
-  const t  = Math.min(1, Math.max(0, (value - GAUGE_MIN) / (GAUGE_MAX - GAUGE_MIN)));
-  const at = (tt) => 180 - 180 * tt;
-  const tip = polar(cx, cy, r - 16, at(t));
-  return (
-    <div>
-      <svg viewBox="0 0 200 118" style={{ width: "100%" }}>
-        <path d={arcPath(cx,cy,r,180,0)} fill="none" stroke={C.z200} strokeWidth="14" strokeLinecap="round"/>
-        {ZONES.map((z, i) => {
-          const end = Math.min(z.to, t);
-          if (end <= z.from) return null;
-          return <path key={i} d={arcPath(cx,cy,r,at(z.from),at(end))} fill="none" stroke={z.color} strokeWidth="14" strokeLinecap="round"/>;
-        })}
-        {[0,0.25,0.5,0.75,1].map((tt, i) => {
-          const a = at(tt);
-          const p1 = polar(cx,cy,r-10,a), p2 = polar(cx,cy,r+10,a);
-          return <line key={i} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={C.z400} strokeWidth="2"/>;
-        })}
-        <line x1={cx} y1={cy} x2={tip.x} y2={tip.y} stroke={C.ink} strokeWidth="3" strokeLinecap="round"/>
-        <circle cx={cx} cy={cy} r="7" fill={C.ink}/>
-      </svg>
-      <div style={{ display:"flex", justifyContent:"space-between", padding:"0 0.5rem",
-        marginTop:"-0.5rem", fontFamily:FONT_MONO, fontSize:"0.65rem",
-        textTransform:"uppercase", letterSpacing:"0.04em", color:C.z400 }}>
-        <span>Budget</span><span>Typical</span><span>Premium</span>
-      </div>
-    </div>
-  );
+(function initGauge(){
+  var cx=100,cy=96,r=72;
+  el('g-track').setAttribute('d', arc(cx,cy,r,180,0));
+  [0,.25,.5,.75,1].forEach(function(tt,i){
+    var a=angAt(tt), p1=polar(cx,cy,r-10,a), p2=polar(cx,cy,r+10,a);
+    var t=el('g-t'+i);
+    t.setAttribute('x1',p1[0].toFixed(2)); t.setAttribute('y1',p1[1].toFixed(2));
+    t.setAttribute('x2',p2[0].toFixed(2)); t.setAttribute('y2',p2[1].toFixed(2));
+  });
+})();
+
+function updateGauge(total){
+  var cx=100,cy=96,r=72;
+  var t=Math.min(1,Math.max(0,(total-GMIN)/(GMAX-GMIN)));
+  ZONES.forEach(function(z,i){
+    var end=Math.min(z.t,t), e=el('g-z'+i);
+    e.setAttribute('d', end>z.f ? arc(cx,cy,r,angAt(z.f),angAt(end)) : '');
+  });
+  var p=polar(cx,cy,r-16,angAt(t));
+  el('g-needle').setAttribute('x2',p[0].toFixed(2));
+  el('g-needle').setAttribute('y2',p[1].toFixed(2));
 }
 
-// ── Badge ──────────────────────────────────────────────────────────────────
-function Badge({ label, assumed, onClick }) {
-  const base = {
-    display:"inline-block", fontFamily:FONT_MONO, fontSize:"0.65rem",
-    fontWeight:600, textTransform:"uppercase", letterSpacing:"0.05em",
-    padding:"0.1rem 0.45rem", borderRadius:"0.375rem",
-    border:`1px ${onClick ? "solid" : "dashed"} ${C.accent}`,
-    color: C.accent, flexShrink:0, lineHeight:1.4,
-  };
-  if (onClick) {
-    return (
-      <button onClick={onClick} style={{ ...base, background:C.z50, cursor:"pointer" }}
-        title="Click to cycle interval">
-        {label} ⟳
-      </button>
-    );
+// ── Wear model ─────────────────────────────────────────────────────────────
+function suggestions(){
+  var trail=(S.xcRpw*S.xcMpr+S.endRpw*S.endMpr)*30;
+  var rpw=S.xcRpw+S.endRpw;
+  var avg=rpw>0?(S.xcRpw*S.xcMpr+S.endRpw*S.endMpr)/rpw:10;
+  var park=S.parkDays*3*avg;
+  var tm=trail+park*1.6;
+  var tires=Math.max(1,Math.round(tm/800+tm/1600));
+  var pm=trail+park*2;
+  var pads=Math.max(1,Math.round(pm/1000*2));
+  var rm=trail+park*1.5;
+  var rotors=Math.max(0,Math.round(rm/4000*2));
+  var sealant=Math.max(2,Math.round(tm/1200));
+  var chains=Math.max(1,Math.round(tm/2000));
+  return {mi:Math.round(trail+park), tires:tires, pads:pads, rotors:rotors, sealant:sealant, chains:chains};
+}
+
+// ── DOM helpers ────────────────────────────────────────────────────────────
+function el(id){ return document.getElementById(id); }
+function setText(id,v){ var e=el(id); if(e) e.textContent=v; }
+function setHTML(id,v){ var e=el(id); if(e) e.innerHTML=v; }
+
+function sliderH(id,label,min,max,step,val,unit,badge,assumed,sub,intKey){
+  var disp=unit==='$'?'$'+val:val+unit;
+  var dmin=unit==='$'?'$'+min:min+unit;
+  var dmax=unit==='$'?'$'+max:max+unit;
+  var bHTML='';
+  if(badge && intKey){
+    bHTML='<button class="badge badge-btn" id="ib-'+intKey+'" data-ikey="'+intKey+'">'+badge+' &#10227;</button>';
+  } else if(badge){
+    bHTML='<span class="badge'+(assumed?' badge-a':'')+'">'+badge+(assumed?'*':'')+'</span>';
   }
-  return <span style={base}>{label}{assumed ? "*" : ""}</span>;
+  return '<div class="item">'+
+    '<div class="item-head">'+
+      '<div class="item-label-group">'+
+        '<label for="r-'+id+'" class="item-label">'+label+'</label>'+bHTML+
+      '</div>'+
+      '<span id="v-'+id+'" class="item-val">'+disp+'</span>'+
+    '</div>'+
+    '<input type="range" id="r-'+id+'" data-key="'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'">'+
+    '<div class="ticks"><span>'+dmin+'</span><span id="s-'+id+'">'+sub+'</span><span>'+dmax+'</span></div>'+
+  '</div>';
 }
 
-// ── Slider ─────────────────────────────────────────────────────────────────
-function Slider({ id, label, value, onChange, min, max, step=5,
-                  unit="$", badge, badgeAssumed, onBadgeClick, sub }) {
-  const display = unit === "$" ? `$${value}` : `${value}${unit}`;
-  const dispMin  = unit === "$" ? `$${min}` : `${min}${unit}`;
-  const dispMax  = unit === "$" ? `$${max}` : `${max}${unit}`;
-  return (
-    <div style={{ padding:"0.875rem 0" }}>
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between",
-                    gap:"0.5rem", marginBottom:"0.5rem", flexWrap:"wrap" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:"0.5rem", minWidth:0 }}>
-          <label htmlFor={id} style={{ fontSize:"0.875rem", fontWeight:500, color:C.z700 }}>
-            {label}
-          </label>
-          {badge && <Badge label={badge} assumed={badgeAssumed} onClick={onBadgeClick}/>}
-        </div>
-        <span style={{ fontFamily:FONT_MONO, fontSize:"0.95rem", fontWeight:600,
-                       color:C.ink, fontVariantNumeric:"tabular-nums" }}>
-          {display}
-        </span>
-      </div>
-      <input id={id} type="range" min={min} max={max} step={step} value={value}
-        onChange={(e) => onChange(Number(e.target.value))} />
-      <div style={{ display:"flex", justifyContent:"space-between", fontFamily:FONT_MONO,
-                    fontSize:"0.65rem", color:C.z400, marginTop:"0.2rem" }}>
-        <span>{dispMin}</span>
-        {sub && <span>{sub}</span>}
-        <span>{dispMax}</span>
-      </div>
-    </div>
-  );
+// ── Build sections ─────────────────────────────────────────────────────────
+function build(){
+  el('sec-susp').innerHTML=
+    '<div class="section-head"><h2 class="section-title">Suspension &amp; Pivots</h2><span class="section-total" id="t-susp"></span></div>'+
+    '<p class="section-sub">Intervals assumed &#8212; see note below</p>'+
+    '<div class="divide">'+
+      sliderH('frontSusp','Front suspension service',110,165,5,S.frontSusp,'$','Annual',true,'')+
+      sliderH('rearSusp','Rear suspension service',130,200,5,S.rearSusp,'$','Annual',true,'')+
+      sliderH('dropper','Dropper service',50,100,5,S.dropper,'$','Annual',true,'')+
+      sliderH('pivotBearings','Suspension pivot bearings',50,260,5,S.pivotBearings,'$','24 mo',true,'')+
+    '</div>';
+
+  el('sec-dt').innerHTML=
+    '<div class="section-head"><h2 class="section-title">Drivetrain</h2><span class="section-total" id="t-dt"></span></div>'+
+    '<p class="section-sub">Click an interval badge to cycle 12 / 24 / 36 mo</p>'+
+    '<div class="divide">'+
+      sliderH('chain','Chain',50,100,5,S.chain,'$',S.chainInt+' mo',false,'','chainInt')+
+      sliderH('cassette','Cassette',75,500,5,S.cassette,'$',S.cassetteInt+' mo',false,'','cassetteInt')+
+      sliderH('chainring','Chainring',20,100,5,S.chainring,'$',S.chainringInt+' mo',false,'','chainringInt')+
+      '<div class="toggle-row">'+
+        '<div class="toggle-text">'+
+          '<div class="toggle-label-row">'+
+            '<span class="item-label">Battery wear &amp; tear</span>'+
+            '<span class="badge">E-bike</span>'+
+          '</div>'+
+          '<p class="toggle-desc">Turn on if you ride an e-MTB. Adds a <span class="toggle-amt">$25/yr</span> reserve toward eventual battery replacement &#8212; capacity fades with charge cycles. Leave off for an analog bike.</p>'+
+        '</div>'+
+        '<button class="switch" id="btn-bat" aria-pressed="false"><span class="knob"></span></button>'+
+      '</div>'+
+    '</div>';
+
+  el('sec-on').innerHTML=
+    '<div class="section-head"><h2 class="section-title">Ongoing Consumables</h2><span class="section-total" id="t-on"></span></div>'+
+    '<div class="divide">'+
+      sliderH('chainLube','Chain lube or wax',30,100,5,S.chainLube,'$','Annual',false,'')+
+      sliderH('sealant','Tubeless sealant',25,100,5,S.sealant,'$','Annual',true,'')+
+      sliderH('tireCost','Tire &#8212; price each',50,110,5,S.tireCost,'$','Per tire',false,'')+
+      sliderH('tireQty','Tires per year',1,7,1,S.tireQty,' tires','Qty',false,'')+
+      sliderH('padCost','Brake pads &#8212; price per set',15,50,5,S.padCost,'$','Per set',false,'')+
+      sliderH('padQty','Pad sets per year',1,12,1,S.padQty,' sets','Qty',false,'')+
+      sliderH('rotorCost','Brake rotor &#8212; price each',20,100,5,S.rotorCost,'$','Per rotor',false,'')+
+      sliderH('rotorQty','Rotors per year',0,4,1,S.rotorQty,' rotors','Qty',false,'')+
+    '</div>';
+
+  el('sec-anc').innerHTML=
+    '<div class="section-head"><h2 class="section-title">Ancillary</h2><span class="section-total" id="t-anc"></span></div>'+
+    '<p class="section-sub">Tire plugs, quick links, UDH, etc.</p>'+
+    '<div class="divide">'+
+      sliderH('ancillary','Incidentals budget',10,500,5,S.ancillary,'$','Annual',true,'')+
+    '</div>';
+
+  el('ws-xc').innerHTML=
+    sliderH('xcRpw','Rides per week',1,7,1,S.xcRpw,' /wk','',false,S.xcRpw+' rides/wk')+
+    '<div style="border-top:1px solid #F4F4F5"></div>'+
+    sliderH('xcMpr','Miles per ride',1,50,1,S.xcMpr,' mi','',false,S.xcMpr+' mi/ride');
+
+  el('ws-end').innerHTML=
+    sliderH('endRpw','Rides per week',0,7,1,S.endRpw,' /wk','',false,S.endRpw+' rides/wk')+
+    '<div style="border-top:1px solid #F4F4F5"></div>'+
+    sliderH('endMpr','Miles per ride',1,50,1,S.endMpr,' mi','',false,S.endMpr+' mi/ride');
+
+  el('ws-park').innerHTML=
+    sliderH('parkDays','Bike park days this season',1,50,1,S.parkDays,' days','',false,'counts ~3x trail wear');
 }
 
-// ── Section card ───────────────────────────────────────────────────────────
-function Section({ title, sub, total, children }) {
-  return (
-    <div style={{ background:"#fff", border:`1px solid ${C.z200}`, borderRadius:"1rem",
-                  padding:"1.25rem", boxShadow:"0 1px 2px rgba(0,0,0,0.04)" }}>
-      <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between",
-                    marginBottom:"0.2rem" }}>
-        <h2 style={{ fontSize:"1rem", fontWeight:600, color:C.inkSoft,
-                     fontFamily:FONT_DISPLAY }}>{title}</h2>
-        <span style={{ fontFamily:FONT_MONO, fontSize:"0.85rem", fontWeight:600,
-                       color:C.accent }}>${total.toFixed(0)}/yr</span>
-      </div>
-      {sub && <p style={{ fontSize:"0.72rem", color:C.z400, marginBottom:"0.1rem" }}>{sub}</p>}
-      <div style={{ borderTop:`1px solid ${C.z100}`, marginTop:"0.25rem" }}>
-        {children}
-      </div>
-    </div>
-  );
-}
+// ── Update display ─────────────────────────────────────────────────────────
+function update(){
+  var a={
+    frontSusp: S.frontSusp,
+    rearSusp:  S.rearSusp,
+    dropper:   S.dropper,
+    pivots:    S.pivotBearings/2,
+    chain:     S.chain/(S.chainInt/12),
+    cassette:  S.cassette/(S.cassetteInt/12),
+    chainring: S.chainring/(S.chainringInt/12),
+    battery:   S.batteryOn?25:0,
+    chainLube: S.chainLube,
+    sealant:   S.sealant,
+    tires:     S.tireCost*S.tireQty,
+    pads:      S.padCost*S.padQty,
+    rotors:    S.rotorCost*S.rotorQty,
+    ancillary: S.ancillary
+  };
+  var susp = a.frontSusp+a.rearSusp+a.dropper+a.pivots;
+  var dt   = a.chain+a.cassette+a.chainring+a.battery;
+  var on   = a.chainLube+a.sealant+a.tires+a.pads+a.rotors;
+  var anc  = a.ancillary;
+  var grand = susp+dt+on+anc;
 
-// ── Divider between items ──────────────────────────────────────────────────
-function ItemDivider() {
-  return <div style={{ borderTop:`1px solid ${C.z100}` }} />;
-}
+  // Gauge + totals
+  updateGauge(grand);
+  setHTML('grand-total','$'+Math.round(grand)+'<small>/yr</small>');
+  setText('grand-mo','approx. $'+Math.round(grand/12)+'/mo');
+  setText('t-susp','$'+Math.round(susp)+'/yr');
+  setText('t-dt','$'+Math.round(dt)+'/yr');
+  setText('t-on','$'+Math.round(on)+'/yr');
+  setText('t-anc','$'+Math.round(anc)+'/yr');
 
-// ── Worksheet ──────────────────────────────────────────────────────────────
-function Worksheet({ open, onToggle, w, setW, onApply }) {
-  const sug = useMemo(() => computeSuggestions(w), [w]);
-  const set  = (k) => (val) => setW((p) => ({ ...p, [k]: val }));
-
-  return (
-    <div style={{ background:"#fff", border:`1px solid ${C.z200}`, borderRadius:"1rem",
-                  boxShadow:"0 1px 2px rgba(0,0,0,0.04)", marginBottom:"1rem",
-                  overflow:"hidden" }}>
-      <button onClick={onToggle}
-        style={{ width:"100%", display:"flex", alignItems:"center",
-                 justifyContent:"space-between", padding:"1.25rem",
-                 background:"none", border:"none", cursor:"pointer",
-                 fontFamily:FONT_DISPLAY, textAlign:"left" }}>
-        <div>
-          <h2 style={{ fontSize:"1rem", fontWeight:600, color:C.inkSoft }}>
-            🗒 Ride Worksheet
-          </h2>
-          <p style={{ fontSize:"0.72rem", color:C.z400, marginTop:"0.1rem" }}>
-            Estimate replacements from how you actually ride
-          </p>
-        </div>
-        <span style={{ fontSize:"1rem", color:C.z400,
-                       transform: open ? "rotate(180deg)" : "none",
-                       transition:"transform 0.2s", display:"block" }}>▾</span>
-      </button>
-
-      {open && (
-        <div style={{ padding:"0 1.25rem 1.25rem" }}>
-          {/* XC */}
-          <p style={{ fontFamily:FONT_MONO, fontSize:"0.65rem", textTransform:"uppercase",
-                      letterSpacing:"0.08em", color:C.accent, fontWeight:700,
-                      marginBottom:"0.25rem" }}>Cross-country / trail</p>
-          <Slider id="xcRpw" label="Rides per week" value={w.xcRpw} onChange={set("xcRpw")}
-            min={1} max={7} step={1} unit=" /wk" sub={`${w.xcRpw} rides/wk`}/>
-          <ItemDivider/>
-          <Slider id="xcMpr" label="Miles per ride" value={w.xcMpr} onChange={set("xcMpr")}
-            min={1} max={50} step={1} unit=" mi" sub={`${w.xcMpr} mi/ride`}/>
-
-          {/* Enduro */}
-          <div style={{ borderTop:`1px solid ${C.z100}`, margin:"0.75rem 0 0.25rem" }}/>
-          <p style={{ fontFamily:FONT_MONO, fontSize:"0.65rem", textTransform:"uppercase",
-                      letterSpacing:"0.08em", color:C.accent, fontWeight:700,
-                      marginBottom:"0.25rem" }}>Enduro / aggressive</p>
-          <Slider id="endRpw" label="Rides per week" value={w.endRpw} onChange={set("endRpw")}
-            min={0} max={7} step={1} unit=" /wk" sub={`${w.endRpw} rides/wk`}/>
-          <ItemDivider/>
-          <Slider id="endMpr" label="Miles per ride" value={w.endMpr} onChange={set("endMpr")}
-            min={1} max={50} step={1} unit=" mi" sub={`${w.endMpr} mi/ride`}/>
-
-          {/* Bike park */}
-          <div style={{ borderTop:`1px solid ${C.z100}`, margin:"0.75rem 0 0.25rem" }}/>
-          <p style={{ fontFamily:FONT_MONO, fontSize:"0.65rem", textTransform:"uppercase",
-                      letterSpacing:"0.08em", color:C.accent, fontWeight:700,
-                      marginBottom:"0.25rem" }}>Bike park</p>
-          <Slider id="parkDays" label="Bike park days this season" value={w.parkDays}
-            onChange={set("parkDays")} min={1} max={50} step={1} unit=" days"
-            sub="counts ~3× trail wear"/>
-
-          {/* Results */}
-          <div style={{ marginTop:"1rem", padding:"1rem", background:C.z50,
-                        border:`1px solid ${C.z200}`, borderRadius:"0.75rem" }}>
-            <div style={{ display:"flex", alignItems:"baseline",
-                          justifyContent:"space-between", marginBottom:"0.75rem" }}>
-              <span style={{ fontSize:"0.8rem", fontWeight:600, color:C.inkSoft }}>
-                Suggested yearly replacements
-              </span>
-              <span style={{ fontFamily:FONT_MONO, fontSize:"0.65rem", color:C.z400 }}>
-                {sug.totalMiles.toLocaleString()} mi-equiv/yr
-              </span>
-            </div>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:"0.4rem" }}>
-              {[
-                { n: sug.tires,   l: "Tires"    },
-                { n: sug.pads,    l: "Pad sets" },
-                { n: sug.rotors,  l: "Rotors"   },
-                { n: sug.chains,  l: "Chains"   },
-                { n: sug.sealant, l: "Sealant"  },
-              ].map(({ n, l }) => (
-                <div key={l} style={{ textAlign:"center", padding:"0.5rem 0.2rem",
-                                      background:"#fff", border:`1px solid ${C.z200}`,
-                                      borderRadius:"0.5rem" }}>
-                  <span style={{ display:"block", fontFamily:FONT_MONO,
-                                 fontSize:"1.25rem", fontWeight:700, color:C.accent }}>{n}</span>
-                  <span style={{ display:"block", fontSize:"0.58rem", textTransform:"uppercase",
-                                 letterSpacing:"0.02em", color:C.z400, marginTop:"0.1rem" }}>{l}</span>
-                </div>
-              ))}
-            </div>
-            <button onClick={() => onApply(sug)}
-              style={{ width:"100%", marginTop:"0.75rem", padding:"0.625rem",
-                       borderRadius:"0.5rem", border:"none", background:C.accent,
-                       color:"#fff", fontSize:"0.8rem", fontWeight:600,
-                       fontFamily:FONT_DISPLAY, cursor:"pointer" }}>
-              Apply to dials above ↑
-            </button>
-            <p style={{ fontSize:"0.65rem", color:C.z400, marginTop:"0.625rem",
-                        lineHeight:1.5 }}>
-              Ballpark only — based on ~800 mi rear tire life; bike-park days weighted
-              heavier for braking and cornering load. Tune the dials yourself after applying.
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Main App ───────────────────────────────────────────────────────────────
-export default function App() {
-  const [v, setV]     = useState(DEFAULTS);
-  const set = (k) => (val) => setV((p) => ({ ...p, [k]: val }));
-  const cycleInterval = (k) => () => setV((p) => {
-    const idx = INTERVAL_CYCLE.indexOf(p[k]);
-    return { ...p, [k]: INTERVAL_CYCLE[(idx + 1) % INTERVAL_CYCLE.length] };
+  // Breakdown bar + legend
+  [['susp',susp],['dt',dt],['on',on],['anc',anc]].forEach(function(p){
+    var seg=el('bar-'+p[0]); if(seg) seg.style.width=(grand>0?p[1]/grand*100:0)+'%';
+    setText('leg-'+p[0],'$'+Math.round(p[1]));
   });
 
-  const [wsOpen, setWsOpen] = useState(false);
-  const [w, setW] = useState({ xcRpw:3, xcMpr:12, endRpw:2, endMpr:8, parkDays:5 });
+  // Slider value displays
+  function v$(id,val){ setText('v-'+id,'$'+val); }
+  function vu(id,val,u){ setText('v-'+id,val+u); }
+  function sub(id,txt){ setText('s-'+id,txt); }
 
-  const applySuggestions = (sug) => {
-    setV((p) => ({ ...p, tireQty:sug.tires, padQty:sug.pads, rotorQty:sug.rotors }));
-    setWsOpen(false);
-  };
+  v$('frontSusp',S.frontSusp); sub('frontSusp','$'+Math.round(a.frontSusp)+'/yr equiv.');
+  v$('rearSusp',S.rearSusp);   sub('rearSusp','$'+Math.round(a.rearSusp)+'/yr equiv.');
+  v$('dropper',S.dropper);     sub('dropper','$'+Math.round(a.dropper)+'/yr equiv.');
+  v$('pivotBearings',S.pivotBearings); sub('pivotBearings','$'+Math.round(a.pivots)+'/yr equiv.');
+  v$('chain',S.chain);         sub('chain','$'+Math.round(a.chain)+'/yr equiv.');
+  v$('cassette',S.cassette);   sub('cassette','$'+Math.round(a.cassette)+'/yr equiv.');
+  v$('chainring',S.chainring); sub('chainring','$'+Math.round(a.chainring)+'/yr equiv.');
+  v$('chainLube',S.chainLube); sub('chainLube','$'+Math.round(a.chainLube)+'/yr equiv.');
+  v$('sealant',S.sealant);     sub('sealant','$'+Math.round(a.sealant)+'/yr equiv.');
+  v$('tireCost',S.tireCost);   sub('tireCost','$'+Math.round(a.tires)+'/yr total');
+  v$('padCost',S.padCost);     sub('padCost','$'+Math.round(a.pads)+'/yr total');
+  v$('rotorCost',S.rotorCost); sub('rotorCost','$'+Math.round(a.rotors)+'/yr total');
+  v$('ancillary',S.ancillary); sub('ancillary','$'+Math.round(a.ancillary)+'/yr equiv.');
+  vu('tireQty',S.tireQty,' tires');   sub('tireQty',S.tireQty+' x $'+S.tireCost);
+  vu('padQty',S.padQty,' sets');      sub('padQty',S.padQty+' x $'+S.padCost);
+  vu('rotorQty',S.rotorQty,' rotors');sub('rotorQty',S.rotorQty+' x $'+S.rotorCost);
 
-  const ann = useMemo(() => ({
-    frontSusp:     v.frontSusp,
-    rearSusp:      v.rearSusp,
-    dropper:       v.dropper,
-    pivotBearings: v.pivotBearings / 2,
-    chain:         v.chain         / (v.chainInterval     / 12),
-    cassette:      v.cassette      / (v.cassetteInterval  / 12),
-    chainring:     v.chainring     / (v.chainringInterval / 12),
-    battery:       v.batteryOn ? 25 : 0,
-    chainLube:     v.chainLube,
-    sealant:       v.sealant,
-    tires:         v.tireCost  * v.tireQty,
-    pads:          v.padCost   * v.padQty,
-    rotors:        v.rotorCost * v.rotorQty,
-    ancillary:     v.ancillary,
-  }), [v]);
+  // Worksheet displays
+  vu('xcRpw',S.xcRpw,' /wk');  sub('xcRpw',S.xcRpw+' rides/wk');
+  vu('xcMpr',S.xcMpr,' mi');   sub('xcMpr',S.xcMpr+' mi/ride');
+  vu('endRpw',S.endRpw,' /wk');sub('endRpw',S.endRpw+' rides/wk');
+  vu('endMpr',S.endMpr,' mi'); sub('endMpr',S.endMpr+' mi/ride');
+  vu('parkDays',S.parkDays,' days');
 
-  const suspTotal   = ann.frontSusp + ann.rearSusp + ann.dropper + ann.pivotBearings;
-  const dtTotal     = ann.chain + ann.cassette + ann.chainring + ann.battery;
-  const ongoingTotal = ann.chainLube + ann.sealant + ann.tires + ann.pads + ann.rotors;
-  const ancTotal    = ann.ancillary;
-  const grandTotal  = suspTotal + dtTotal + ongoingTotal + ancTotal;
-
-  const segments = [
-    { label:"Suspension", val:suspTotal,    color:C.accent },
-    { label:"Drivetrain", val:dtTotal,      color:C.bright },
-    { label:"Ongoing",    val:ongoingTotal, color:C.z400   },
-    { label:"Ancillary",  val:ancTotal,     color:C.z300   },
-  ];
-
-  return (
-    <div style={{ minHeight:"100vh", background:C.z50, fontFamily:FONT_DISPLAY, color:C.ink }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap');
-        * { box-sizing:border-box; margin:0; padding:0; }
-        body { -webkit-font-smoothing:antialiased; }
-        input[type=range] { -webkit-appearance:none; appearance:none; width:100%; background:transparent; cursor:pointer; }
-        input[type=range]::-webkit-slider-runnable-track { height:5px; border-radius:999px; background:#E4E4E7; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:16px; height:16px; border-radius:4px; background:#18181B; border:2px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,0.35); margin-top:-5.5px; }
-        input[type=range]::-moz-range-track { height:5px; border-radius:999px; background:#E4E4E7; }
-        input[type=range]::-moz-range-thumb { width:16px; height:16px; border-radius:4px; background:#18181B; border:2px solid #fff; }
-      `}</style>
-
-      <div style={{ maxWidth:"30rem", margin:"0 auto", padding:"2rem 1rem" }}>
-
-        {/* Header */}
-        <div style={{ marginBottom:"1.5rem" }}>
-          <p style={{ fontFamily:FONT_MONO, fontSize:"0.65rem", textTransform:"uppercase",
-                      letterSpacing:"0.15em", color:C.accent, fontWeight:600,
-                      marginBottom:"0.2rem" }}>Post Millennium Renaissance — Mockup</p>
-          <h1 style={{ fontSize:"1.5rem", fontWeight:700 }}>MTB Annual Maintenance Cost</h1>
-          <p style={{ fontSize:"0.875rem", color:C.z500, marginTop:"0.25rem" }}>
-            Dial in each line item to estimate your yearly spend.
-          </p>
-        </div>
-
-        {/* Gauge card */}
-        <div style={{ background:"#fff", border:`1px solid ${C.z200}`, borderRadius:"1.5rem",
-                      padding:"1.5rem", boxShadow:"0 1px 2px rgba(0,0,0,0.04)",
-                      marginBottom:"1.5rem" }}>
-          <Gauge value={grandTotal}/>
-          <div style={{ textAlign:"center", marginTop:"0.25rem" }}>
-            <span style={{ fontFamily:FONT_MONO, fontSize:"2.25rem", fontWeight:700,
-                           fontVariantNumeric:"tabular-nums" }}>
-              ${grandTotal.toFixed(0)}
-              <small style={{ fontSize:"1rem", fontWeight:500, color:C.z400,
-                              marginLeft:"0.25rem" }}>/yr</small>
-            </span>
-            <div style={{ fontFamily:FONT_MONO, fontSize:"0.875rem", color:C.z400,
-                          marginTop:"0.125rem" }}>
-              ≈ ${(grandTotal/12).toFixed(0)}/mo
-            </div>
-          </div>
-        </div>
-
-        {/* Breakdown bar */}
-        <div style={{ background:"#fff", border:`1px solid ${C.z200}`, borderRadius:"1rem",
-                      padding:"1.25rem", boxShadow:"0 1px 2px rgba(0,0,0,0.04)",
-                      marginBottom:"1rem" }}>
-          <h2 style={{ fontSize:"1rem", fontWeight:600, color:C.inkSoft,
-                       marginBottom:"0.75rem" }}>Where it goes</h2>
-          <div style={{ display:"flex", height:"10px", borderRadius:"999px",
-                        overflow:"hidden", background:C.z100, marginBottom:"0.75rem" }}>
-            {segments.map((s, i) => (
-              <div key={i} style={{ background:s.color,
-                width:`${grandTotal>0?(s.val/grandTotal)*100:0}%` }}/>
-            ))}
-          </div>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0.5rem 1rem" }}>
-            {segments.map((s, i) => (
-              <div key={i} style={{ display:"flex", alignItems:"center", gap:"0.5rem",
-                                    fontSize:"0.75rem" }}>
-                <span style={{ width:8, height:8, borderRadius:"999px",
-                               background:s.color, flexShrink:0 }}/>
-                <span style={{ color:C.z500 }}>{s.label}</span>
-                <span style={{ marginLeft:"auto", fontFamily:FONT_MONO, fontWeight:600,
-                               color:C.z700, fontVariantNumeric:"tabular-nums" }}>
-                  ${s.val.toFixed(0)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Ride Worksheet */}
-        <Worksheet open={wsOpen} onToggle={() => setWsOpen(!wsOpen)}
-          w={w} setW={setW} onApply={applySuggestions}/>
-
-        {/* Sections */}
-        <div style={{ display:"flex", flexDirection:"column", gap:"1rem" }}>
-
-          {/* Suspension */}
-          <Section title="Suspension & Pivots" sub="Intervals assumed — see note below" total={suspTotal}>
-            <Slider id="frontSusp" label="Front suspension service" value={v.frontSusp}
-              onChange={set("frontSusp")} min={RANGES.frontSusp[0]} max={RANGES.frontSusp[1]}
-              badge="Annual" badgeAssumed sub={`$${ann.frontSusp.toFixed(0)}/yr equiv.`}/>
-            <ItemDivider/>
-            <Slider id="rearSusp" label="Rear suspension service" value={v.rearSusp}
-              onChange={set("rearSusp")} min={RANGES.rearSusp[0]} max={RANGES.rearSusp[1]}
-              badge="Annual" badgeAssumed sub={`$${ann.rearSusp.toFixed(0)}/yr equiv.`}/>
-            <ItemDivider/>
-            <Slider id="dropper" label="Dropper service" value={v.dropper}
-              onChange={set("dropper")} min={RANGES.dropper[0]} max={RANGES.dropper[1]}
-              badge="Annual" badgeAssumed sub={`$${ann.dropper.toFixed(0)}/yr equiv.`}/>
-            <ItemDivider/>
-            <Slider id="pivotBearings" label="Suspension pivot bearings" value={v.pivotBearings}
-              onChange={set("pivotBearings")} min={RANGES.pivotBearings[0]} max={RANGES.pivotBearings[1]}
-              badge="24 mo" badgeAssumed sub={`$${ann.pivotBearings.toFixed(0)}/yr equiv.`}/>
-          </Section>
-
-          {/* Drivetrain */}
-          <Section title="Drivetrain" sub="Click an interval badge to cycle 12 / 24 / 36 mo" total={dtTotal}>
-            <Slider id="chain" label="Chain" value={v.chain}
-              onChange={set("chain")} min={RANGES.chain[0]} max={RANGES.chain[1]}
-              badge={`${v.chainInterval} mo`} onBadgeClick={cycleInterval("chainInterval")}
-              sub={`$${ann.chain.toFixed(0)}/yr equiv.`}/>
-            <ItemDivider/>
-            <Slider id="cassette" label="Cassette" value={v.cassette}
-              onChange={set("cassette")} min={RANGES.cassette[0]} max={RANGES.cassette[1]}
-              badge={`${v.cassetteInterval} mo`} onBadgeClick={cycleInterval("cassetteInterval")}
-              sub={`$${ann.cassette.toFixed(0)}/yr equiv.`}/>
-            <ItemDivider/>
-            <Slider id="chainring" label="Chainring" value={v.chainring}
-              onChange={set("chainring")} min={RANGES.chainring[0]} max={RANGES.chainring[1]}
-              badge={`${v.chainringInterval} mo`} onBadgeClick={cycleInterval("chainringInterval")}
-              sub={`$${ann.chainring.toFixed(0)}/yr equiv.`}/>
-            <ItemDivider/>
-            {/* Battery toggle */}
-            <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between",
-                          padding:"0.875rem 0", gap:"0.75rem" }}>
-              <div style={{ minWidth:0 }}>
-                <div style={{ display:"flex", alignItems:"center", gap:"0.5rem",
-                              marginBottom:"0.3rem" }}>
-                  <span style={{ fontSize:"0.875rem", fontWeight:500, color:C.z700 }}>
-                    Battery wear & tear
-                  </span>
-                  <Badge label="E-bike"/>
-                </div>
-                <p style={{ fontSize:"0.72rem", color:C.z400, lineHeight:1.5 }}>
-                  Turn on if you ride an e-MTB. Adds a{" "}
-                  <span style={{ fontFamily:FONT_MONO, fontSize:"0.72rem",
-                                 color:C.accent, fontWeight:600 }}>$25/yr</span>{" "}
-                  reserve toward eventual battery replacement — capacity fades with charge
-                  cycles over time. Leave off for an analog (non-motorized) bike.
-                </p>
-              </div>
-              <button onClick={() => set("batteryOn")(!v.batteryOn)}
-                aria-pressed={v.batteryOn}
-                style={{ position:"relative", width:44, height:24, borderRadius:999,
-                         border:"none", cursor:"pointer", flexShrink:0,
-                         background: v.batteryOn ? C.accent : C.z200,
-                         transition:"background-color 0.15s", marginTop:"0.125rem" }}>
-                <span style={{ position:"absolute", top:2, left:2, width:20, height:20,
-                               background:"#fff", borderRadius:999,
-                               boxShadow:"0 1px 2px rgba(0,0,0,0.2)",
-                               transform: v.batteryOn ? "translateX(20px)" : "none",
-                               transition:"transform 0.15s", display:"block" }}/>
-              </button>
-            </div>
-          </Section>
-
-          {/* Ongoing Consumables */}
-          <Section title="Ongoing Consumables" total={ongoingTotal}>
-            <Slider id="chainLube" label="Chain lube or wax" value={v.chainLube}
-              onChange={set("chainLube")} min={RANGES.chainLube[0]} max={RANGES.chainLube[1]}
-              badge="Annual" sub={`$${ann.chainLube.toFixed(0)}/yr equiv.`}/>
-            <ItemDivider/>
-            <Slider id="sealant" label="Tubeless sealant" value={v.sealant}
-              onChange={set("sealant")} min={RANGES.sealant[0]} max={RANGES.sealant[1]}
-              badge="Annual" badgeAssumed sub={`$${ann.sealant.toFixed(0)}/yr equiv.`}/>
-            <ItemDivider/>
-            <Slider id="tireCost" label="Tire — price each" value={v.tireCost}
-              onChange={set("tireCost")} min={RANGES.tireCost[0]} max={RANGES.tireCost[1]}
-              badge="Per tire" sub={`$${ann.tires.toFixed(0)}/yr total`}/>
-            <ItemDivider/>
-            <Slider id="tireQty" label="Tires per year" value={v.tireQty}
-              onChange={set("tireQty")} min={1} max={7} step={1}
-              unit=" tires" badge="Qty" sub={`${v.tireQty} × $${v.tireCost}`}/>
-            <ItemDivider/>
-            <Slider id="padCost" label="Brake pads — price per set" value={v.padCost}
-              onChange={set("padCost")} min={RANGES.padCost[0]} max={RANGES.padCost[1]}
-              badge="Per set" sub={`$${ann.pads.toFixed(0)}/yr total`}/>
-            <ItemDivider/>
-            <Slider id="padQty" label="Pad sets per year" value={v.padQty}
-              onChange={set("padQty")} min={1} max={12} step={1}
-              unit=" sets" badge="Qty" sub={`${v.padQty} × $${v.padCost}`}/>
-            <ItemDivider/>
-            <Slider id="rotorCost" label="Brake rotor — price each" value={v.rotorCost}
-              onChange={set("rotorCost")} min={RANGES.rotorCost[0]} max={RANGES.rotorCost[1]}
-              badge="Per rotor" sub={`$${ann.rotors.toFixed(0)}/yr total`}/>
-            <ItemDivider/>
-            <Slider id="rotorQty" label="Rotors per year" value={v.rotorQty}
-              onChange={set("rotorQty")} min={0} max={4} step={1}
-              unit=" rotors" badge="Qty" sub={`${v.rotorQty} × $${v.rotorCost}`}/>
-          </Section>
-
-          {/* Ancillary */}
-          <Section title="Ancillary" sub="Tire plugs, quick links, UDH, etc." total={ancTotal}>
-            <Slider id="ancillary" label="Incidentals budget" value={v.ancillary}
-              onChange={set("ancillary")} min={RANGES.ancillary[0]} max={RANGES.ancillary[1]}
-              badge="Annual" badgeAssumed sub={`$${ann.ancillary.toFixed(0)}/yr equiv.`}/>
-          </Section>
-        </div>
-
-        {/* Reset */}
-        <button onClick={() => setV(DEFAULTS)}
-          style={{ width:"100%", marginTop:"1.25rem", padding:"0.75rem",
-                   borderRadius:"0.75rem", border:`1px solid ${C.z300}`,
-                   background:"#fff", color:C.z500, fontSize:"0.875rem", fontWeight:500,
-                   fontFamily:FONT_DISPLAY, cursor:"pointer" }}>
-          Reset to defaults
-        </button>
-
-        <p style={{ fontSize:"0.7rem", color:C.z400, marginTop:"1rem", lineHeight:1.6 }}>
-          * Interval not specified in original spec — defaulted to annual (24 months for
-          pivot bearings). All numbers are placeholders for discussion.
-        </p>
-      </div>
-    </div>
-  );
+  // Worksheet suggestions
+  var sg=suggestions();
+  setText('ws-miles',sg.mi.toLocaleString()+' mi-equiv/yr');
+  setText('ws-tires',sg.tires); setText('ws-pads',sg.pads);
+  setText('ws-rotors',sg.rotors); setText('ws-chains',sg.chains);
+  setText('ws-sealant',sg.sealant);
+  document._sg=sg;
 }
+
+// ── Events ─────────────────────────────────────────────────────────────────
+document.addEventListener('input', function(e){
+  if(!e.target.dataset.key) return;
+  S[e.target.dataset.key]=Number(e.target.value);
+  update();
+});
+
+document.addEventListener('click', function(e){
+  var t=e.target;
+
+  // Interval badges
+  var ikey=t.dataset && t.dataset.ikey;
+  if(ikey){
+    var idx=INT.indexOf(S[ikey]);
+    S[ikey]=INT[(idx+1)%INT.length];
+    t.innerHTML=S[ikey]+' mo &#10227;';
+    update(); return;
+  }
+
+  // Battery toggle (click on button or knob inside it)
+  var bat=t.id==='btn-bat'?t:t.closest('#btn-bat');
+  if(bat){
+    S.batteryOn=!S.batteryOn;
+    bat.classList.toggle('on',S.batteryOn);
+    bat.setAttribute('aria-pressed',S.batteryOn);
+    update(); return;
+  }
+
+  // Apply worksheet
+  if(t.id==='btn-apply'){
+    var sg=document._sg||suggestions();
+    S.tireQty=sg.tires; S.padQty=sg.pads; S.rotorQty=sg.rotors;
+    ['tireQty','padQty','rotorQty'].forEach(function(k){
+      var r=el('r-'+k); if(r) r.value=S[k];
+    });
+    update();
+    var ws=document.querySelector('details.ws'); if(ws) ws.open=false;
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+
+  // Reset
+  if(t.id==='btn-reset'){
+    Object.assign(S,D);
+    document.querySelectorAll('input[data-key]').forEach(function(r){
+      if(S[r.dataset.key]!==undefined) r.value=S[r.dataset.key];
+    });
+    ['chainInt','cassetteInt','chainringInt'].forEach(function(k){
+      var b=el('ib-'+k); if(b) b.innerHTML=S[k]+' mo &#10227;';
+    });
+    var bat=el('btn-bat');
+    if(bat){ bat.classList.remove('on'); bat.setAttribute('aria-pressed',false); }
+    update();
+  }
+});
+
+// ── Init ───────────────────────────────────────────────────────────────────
+build();
+update();
+</script>
+</body>
+</html>
