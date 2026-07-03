@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MTB Annual Maintenance Cost — Post Millennium Renaissance</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#FAFAFA;font-family:'Space Grotesk',system-ui,sans-serif;color:#18181B;-webkit-font-smoothing:antialiased}
@@ -78,13 +78,57 @@ details.ws[open] .chevron{transform:rotate(180deg)}
 .reset-btn{width:100%;margin-top:1.25rem;padding:.75rem;border-radius:.75rem;border:1px solid #D4D4D8;background:#fff;color:#71717A;font-size:.875rem;font-weight:500;font-family:'Space Grotesk',system-ui,sans-serif;cursor:pointer}
 .reset-btn:hover{background:#F4F4F5}
 .footnote{font-size:.7rem;color:#A1A1AA;margin-top:1rem;line-height:1.6}
+.top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}
+.pmr-badge{flex-shrink:0;width:52px;height:52px;display:block}
+.pmr-badge:hover{opacity:.85}
+.share-btn{width:100%;margin-top:.6rem;padding:.75rem;border-radius:.75rem;border:1px solid #D4D4D8;background:#fff;color:#0E7490;font-size:.875rem;font-weight:600;font-family:'Space Grotesk',system-ui,sans-serif;cursor:pointer}
+.share-btn:hover{background:#E0F2FE}
+.share-btn.copied{border-color:#0E7490;background:#E0F2FE}
+
+/* ── Skip it ── */
+.skip-btn{font-family:'JetBrains Mono',monospace;font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:.1rem .45rem;border-radius:.375rem;border:1px solid #E4E4E7;background:#fff;color:#A1A1AA;cursor:pointer;flex-shrink:0;line-height:1.4}
+.skip-btn:hover{border-color:#DC2626;color:#DC2626;background:#FEF2F2}
+.skip-btn.active{border-color:#DC2626;color:#DC2626;background:#FEF2F2}
+.item.skipped input[type=range]{opacity:.3;pointer-events:none}
+.item.skipped .item-label{color:#A1A1AA;text-decoration:line-through}
+.item.skipped .item-val{color:#A1A1AA;text-decoration:line-through}
+.item.skipped .ticks{opacity:.5}
+
+/* ── Battery easter egg ── */
+.bat-egg{display:none;font-size:.7rem;font-style:italic;color:#0E7490;margin-top:.45rem;line-height:1.5}
+.bat-egg.show{display:block;animation:eggFade .35s ease-out}
+@keyframes eggFade{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+
+/* ── Game over overlay ── */
+#go-overlay{position:fixed;inset:0;background:rgba(9,9,11,.94);display:none;z-index:999;cursor:pointer}
+#go-overlay.show{display:flex;align-items:center;justify-content:center}
+#go-overlay::after{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.045) 0 1px,transparent 1px 3px)}
+.go-box{font-family:'Press Start 2P',monospace;text-align:center;padding:1.5rem;transform:translateY(-120vh)}
+#go-overlay.show .go-box{animation:goDrop .75s cubic-bezier(.34,1.3,.5,1) forwards}
+@keyframes goDrop{0%{transform:translateY(-120vh)}80%{transform:translateY(1.25rem)}100%{transform:translateY(0)}}
+.go-title{font-size:clamp(1.5rem,7vw,2.25rem);color:#FF4245;text-shadow:3px 3px 0 #7F1D1D;margin-bottom:1.5rem}
+.go-line{font-size:.55rem;color:#FAFAFA;line-height:2.1}
+.go-hint{font-size:.5rem;color:#FDE047;margin-top:1.75rem;animation:goBlink 1s steps(1) infinite}
+@keyframes goBlink{50%{opacity:0}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <p class="eyebrow">Post Millennium Renaissance</p>
-  <h1>MTB Annual Maintenance Cost</h1>
-  <p class="sub-head">Dial in each line item to estimate your yearly spend.</p>
+  <div class="top-row">
+    <div>
+      <p class="eyebrow">Post Millennium Renaissance</p>
+      <h1>MTB Annual Maintenance Cost</h1>
+      <p class="sub-head">Dial in each line item to estimate your yearly spend.</p>
+    </div>
+    <a href="https://www.postmillenniumrenaissance.com" target="_blank" rel="noopener" class="pmr-badge" aria-label="Visit Post Millennium Renaissance">
+      <svg viewBox="0 0 100 100" width="100%" height="100%">
+        <polygon points="50,2 58,12 69,6 73,18 86,15 86,28 98,32 93,44 100,55 89,61 91,74 78,75 74,88 62,84 55,95 46,86 35,94 30,81 17,82 15,69 3,64 10,53 2,42 14,37 12,24 25,24 28,11 40,15" fill="#B08D57"/>
+        <ellipse cx="50" cy="50" rx="34" ry="24" fill="#FAFAFA"/>
+        <ellipse cx="50" cy="50" rx="30" ry="20" fill="none" stroke="#B08D57" stroke-width="1.5"/>
+        <text x="50" y="58" text-anchor="middle" font-family="'Space Grotesk',system-ui,sans-serif" font-weight="700" font-size="22" fill="#0E5A73">PMR</text>
+      </svg>
+    </a>
+  </div>
 
   <!-- Gauge -->
   <div class="card gauge-card">
@@ -170,7 +214,17 @@ details.ws[open] .chevron{transform:rotate(180deg)}
   </div>
 
   <button class="reset-btn" id="btn-reset">Reset to defaults</button>
-  <p class="footnote">* Interval not specified in original spec &#8212; defaulted to annual (24 months for pivot bearings). All numbers are placeholders for discussion.</p>
+  <button class="share-btn" id="btn-share">Copy share link</button>
+  <p class="footnote">* Interval not specified in original spec &#8212; defaulted to annual (24 months for pivot bearings). Defaults reflect typical US retail pricing; adjust to your setup.</p>
+</div>
+
+<div id="go-overlay" role="alertdialog" aria-label="Game over — brake pads cannot be skipped">
+  <div class="go-box">
+    <div class="go-title">GAME OVER</div>
+    <p class="go-line">YOU TRIED TO SKIP<br>BRAKE PADS</p>
+    <p class="go-line" style="color:#A1A1AA">BRAKES ARE NOT OPTIONAL</p>
+    <p class="go-hint">&#9654; TAP TO CONTINUE</p>
+  </div>
 </div>
 
 <script>
@@ -187,6 +241,14 @@ var D = {
   xcRpw:3, xcMpr:12, endRpw:2, endMpr:8, parkDays:5
 };
 var S = Object.assign({}, D);
+var SKIP = {};
+var SKIPMAP = {
+  frontSusp:['frontSusp'], rearSusp:['rearSusp'], dropper:['dropper'], pivotBearings:['pivotBearings'],
+  chain:['chain'], cassette:['cassette'], chainring:['chainring'],
+  chainLube:['chainLube'], sealant:['sealant'],
+  tires:['tireCost','tireQty'], rotors:['rotorCost','rotorQty'],
+  ancillary:['ancillary']
+};
 var INT = [12, 24, 36];
 var GMIN=400, GMAX=2600;
 var ZONES=[{f:0,t:.4,c:'#0E7490'},{f:.4,t:.75,c:'#D97706'},{f:.75,t:1,c:'#DC2626'}];
@@ -251,7 +313,7 @@ function el(id){ return document.getElementById(id); }
 function setText(id,v){ var e=el(id); if(e) e.textContent=v; }
 function setHTML(id,v){ var e=el(id); if(e) e.innerHTML=v; }
 
-function sliderH(id,label,min,max,step,val,unit,badge,assumed,sub,intKey){
+function sliderH(id,label,min,max,step,val,unit,badge,assumed,sub,intKey,skipKey){
   var disp=unit==='$'?'$'+val:val+unit;
   var dmin=unit==='$'?'$'+min:min+unit;
   var dmax=unit==='$'?'$'+max:max+unit;
@@ -261,7 +323,10 @@ function sliderH(id,label,min,max,step,val,unit,badge,assumed,sub,intKey){
   } else if(badge){
     bHTML='<span class="badge'+(assumed?' badge-a':'')+'">'+badge+(assumed?'*':'')+'</span>';
   }
-  return '<div class="item">'+
+  if(skipKey){
+    bHTML+='<button class="skip-btn" data-skip="'+skipKey+'" aria-pressed="false">skip it</button>';
+  }
+  return '<div class="item" id="item-'+id+'">'+
     '<div class="item-head">'+
       '<div class="item-label-group">'+
         '<label for="r-'+id+'" class="item-label">'+label+'</label>'+bHTML+
@@ -279,26 +344,27 @@ function build(){
     '<div class="section-head"><h2 class="section-title">Suspension &amp; Pivots</h2><span class="section-total" id="t-susp"></span></div>'+
     '<p class="section-sub">Intervals assumed &#8212; see note below</p>'+
     '<div class="divide">'+
-      sliderH('frontSusp','Front suspension service',110,165,5,S.frontSusp,'$','Annual',true,'')+
-      sliderH('rearSusp','Rear suspension service',130,200,5,S.rearSusp,'$','Annual',true,'')+
-      sliderH('dropper','Dropper service',50,100,5,S.dropper,'$','Annual',true,'')+
-      sliderH('pivotBearings','Suspension pivot bearings',50,260,5,S.pivotBearings,'$','24 mo',true,'')+
+      sliderH('frontSusp','Front suspension service',110,165,5,S.frontSusp,'$','Annual',true,'','','frontSusp')+
+      sliderH('rearSusp','Rear suspension service',130,200,5,S.rearSusp,'$','Annual',true,'','','rearSusp')+
+      sliderH('dropper','Dropper service',50,100,5,S.dropper,'$','Annual',true,'','','dropper')+
+      sliderH('pivotBearings','Suspension pivot bearings',50,260,5,S.pivotBearings,'$','24 mo',true,'','','pivotBearings')+
     '</div>';
 
   el('sec-dt').innerHTML=
     '<div class="section-head"><h2 class="section-title">Drivetrain</h2><span class="section-total" id="t-dt"></span></div>'+
     '<p class="section-sub">Click an interval badge to cycle 12 / 24 / 36 mo</p>'+
     '<div class="divide">'+
-      sliderH('chain','Chain',50,100,5,S.chain,'$',S.chainInt+' mo',false,'','chainInt')+
-      sliderH('cassette','Cassette',75,500,5,S.cassette,'$',S.cassetteInt+' mo',false,'','cassetteInt')+
-      sliderH('chainring','Chainring',20,100,5,S.chainring,'$',S.chainringInt+' mo',false,'','chainringInt')+
+      sliderH('chain','Chain',50,100,5,S.chain,'$',S.chainInt+' mo',false,'','chainInt','chain')+
+      sliderH('cassette','Cassette',75,500,5,S.cassette,'$',S.cassetteInt+' mo',false,'','cassetteInt','cassette')+
+      sliderH('chainring','Chainring',20,100,5,S.chainring,'$',S.chainringInt+' mo',false,'','chainringInt','chainring')+
       '<div class="toggle-row">'+
         '<div class="toggle-text">'+
           '<div class="toggle-label-row">'+
             '<span class="item-label">Battery wear &amp; tear</span>'+
             '<span class="badge">E-bike</span>'+
           '</div>'+
-          '<p class="toggle-desc">Turn on if you ride an e-MTB. Adds a <span class="toggle-amt">$25/yr</span> reserve toward eventual battery replacement &#8212; capacity fades with charge cycles. Leave off for an analog bike.</p>'+
+          '<p class="toggle-desc">Turn on if you ride an e-MTB or have batteries on your rig. Adds a <span class="toggle-amt">$25/yr</span> reserve toward eventual battery replacement &#8212; capacity fades with charge cycles.</p>'+
+          '<p class="bat-egg" id="bat-egg">Remember, it&#39;s a battery-powered derailleur, not an electric drivetrain.</p>'+
         '</div>'+
         '<button class="switch" id="btn-bat" aria-pressed="false"><span class="knob"></span></button>'+
       '</div>'+
@@ -307,13 +373,13 @@ function build(){
   el('sec-on').innerHTML=
     '<div class="section-head"><h2 class="section-title">Ongoing Consumables</h2><span class="section-total" id="t-on"></span></div>'+
     '<div class="divide">'+
-      sliderH('chainLube','Chain lube or wax',30,100,5,S.chainLube,'$','Annual',false,'')+
-      sliderH('sealant','Tubeless sealant',25,100,5,S.sealant,'$','Annual',true,'')+
-      sliderH('tireCost','Tire &#8212; price each',50,110,5,S.tireCost,'$','Per tire',false,'')+
+      sliderH('chainLube','Chain lube or wax',30,100,5,S.chainLube,'$','Annual',false,'','','chainLube')+
+      sliderH('sealant','Tubeless sealant',25,100,5,S.sealant,'$','Annual',true,'','','sealant')+
+      sliderH('tireCost','Tire &#8212; price each',50,110,5,S.tireCost,'$','Per tire',false,'','','tires')+
       sliderH('tireQty','Tires per year',1,7,1,S.tireQty,' tires','Qty',false,'')+
-      sliderH('padCost','Brake pads &#8212; price per set',15,50,5,S.padCost,'$','Per set',false,'')+
+      sliderH('padCost','Brake pads &#8212; price per set',15,50,5,S.padCost,'$','Per set',false,'','','pads')+
       sliderH('padQty','Pad sets per year',1,12,1,S.padQty,' sets','Qty',false,'')+
-      sliderH('rotorCost','Brake rotor &#8212; price each',20,100,5,S.rotorCost,'$','Per rotor',false,'')+
+      sliderH('rotorCost','Brake rotor &#8212; price each',20,100,5,S.rotorCost,'$','Per rotor',false,'','','rotors')+
       sliderH('rotorQty','Rotors per year',0,4,1,S.rotorQty,' rotors','Qty',false,'')+
     '</div>';
 
@@ -321,7 +387,7 @@ function build(){
     '<div class="section-head"><h2 class="section-title">Ancillary</h2><span class="section-total" id="t-anc"></span></div>'+
     '<p class="section-sub">Tire plugs, quick links, UDH, etc.</p>'+
     '<div class="divide">'+
-      sliderH('ancillary','Incidentals budget',10,500,5,S.ancillary,'$','Annual',true,'')+
+      sliderH('ancillary','Incidentals budget',10,500,5,S.ancillary,'$','Annual',true,'','','ancillary')+
     '</div>';
 
   el('ws-xc').innerHTML=
@@ -356,6 +422,19 @@ function update(){
     rotors:    S.rotorCost*S.rotorQty,
     ancillary: S.ancillary
   };
+  // Zero out skipped items
+  if(SKIP.frontSusp) a.frontSusp=0;
+  if(SKIP.rearSusp) a.rearSusp=0;
+  if(SKIP.dropper) a.dropper=0;
+  if(SKIP.pivotBearings) a.pivots=0;
+  if(SKIP.chain) a.chain=0;
+  if(SKIP.cassette) a.cassette=0;
+  if(SKIP.chainring) a.chainring=0;
+  if(SKIP.chainLube) a.chainLube=0;
+  if(SKIP.sealant) a.sealant=0;
+  if(SKIP.tires) a.tires=0;
+  if(SKIP.rotors) a.rotors=0;
+  if(SKIP.ancillary) a.ancillary=0;
   var susp = a.frontSusp+a.rearSusp+a.dropper+a.pivots;
   var dt   = a.chain+a.cassette+a.chainring+a.battery;
   var on   = a.chainLube+a.sealant+a.tires+a.pads+a.rotors;
@@ -422,8 +501,50 @@ document.addEventListener('input', function(e){
   update();
 });
 
+function syncSkip(key){
+  var on=!!SKIP[key];
+  (SKIPMAP[key]||[]).forEach(function(id){
+    var it=el('item-'+id); if(it) it.classList.toggle('skipped',on);
+  });
+  document.querySelectorAll('[data-skip="'+key+'"]').forEach(function(b){
+    b.innerHTML=on?'skipped &#8634;':'skip it';
+    b.classList.toggle('active',on);
+    b.setAttribute('aria-pressed',on);
+  });
+}
+
+var lastPadBtn=null;
+function gameOver(btn){
+  lastPadBtn=btn;
+  el('go-overlay').classList.add('show');
+  document.body.style.overflow='hidden';
+}
+function dismissGameOver(){
+  el('go-overlay').classList.remove('show');
+  document.body.style.overflow='';
+  if(lastPadBtn){
+    var b=lastPadBtn; lastPadBtn=null;
+    b.textContent='nice try';
+    setTimeout(function(){ b.textContent='skip it'; }, 2000);
+  }
+}
+
 document.addEventListener('click', function(e){
   var t=e.target;
+
+  // Game over overlay — tap anywhere to dismiss
+  if(t.id==='go-overlay' || (t.closest && t.closest('#go-overlay'))){
+    dismissGameOver(); return;
+  }
+
+  // Skip buttons
+  var sk=t.dataset && t.dataset.skip;
+  if(sk){
+    if(sk==='pads'){ gameOver(t); return; }
+    SKIP[sk]=!SKIP[sk];
+    syncSkip(sk);
+    update(); return;
+  }
 
   // Interval badges
   var ikey=t.dataset && t.dataset.ikey;
@@ -440,6 +561,7 @@ document.addEventListener('click', function(e){
     S.batteryOn=!S.batteryOn;
     bat.classList.toggle('on',S.batteryOn);
     bat.setAttribute('aria-pressed',S.batteryOn);
+    var egg=el('bat-egg'); if(egg) egg.classList.add('show');
     update(); return;
   }
 
@@ -447,6 +569,9 @@ document.addEventListener('click', function(e){
   if(t.id==='btn-apply'){
     var sg=document._sg||suggestions();
     S.tireQty=sg.tires; S.padQty=sg.pads; S.rotorQty=sg.rotors;
+    ['tires','rotors'].forEach(function(k){
+      if(SKIP[k]){ SKIP[k]=false; syncSkip(k); }
+    });
     ['tireQty','padQty','rotorQty'].forEach(function(k){
       var r=el('r-'+k); if(r) r.value=S[k];
     });
@@ -467,12 +592,64 @@ document.addEventListener('click', function(e){
     });
     var bat=el('btn-bat');
     if(bat){ bat.classList.remove('on'); bat.setAttribute('aria-pressed',false); }
+    Object.keys(SKIP).forEach(function(k){ SKIP[k]=false; syncSkip(k); });
+    var egg=el('bat-egg'); if(egg) egg.classList.remove('show');
     update();
   }
 });
 
 // ── Init ───────────────────────────────────────────────────────────────────
+var STATE_KEYS=['frontSusp','rearSusp','dropper','pivotBearings','chain','cassette','chainring',
+  'chainInt','cassetteInt','chainringInt','chainLube','sealant','tireCost','tireQty',
+  'padCost','padQty','rotorCost','rotorQty','ancillary','xcRpw','xcMpr','endRpw','endMpr','parkDays'];
+var SKIP_KEYS=Object.keys(SKIPMAP);
+
+function loadFromURL(){
+  var qs=new URLSearchParams(window.location.search);
+  var v=qs.get('s');
+  if(!v) return;
+  var parts=v.split('.');
+  var vals=(parts[0]||'').split(',');
+  STATE_KEYS.forEach(function(k,i){
+    if(vals[i]!==undefined && vals[i]!=='') S[k]=Number(vals[i]);
+  });
+  if(parts[1]==='1') S.batteryOn=true;
+  var skipBits=parts[2]||'';
+  SKIP_KEYS.forEach(function(k,i){ if(skipBits[i]==='1') SKIP[k]=true; });
+}
+
+function buildShareURL(){
+  var vals=STATE_KEYS.map(function(k){ return S[k]; }).join(',');
+  var bat=S.batteryOn?'1':'0';
+  var skipBits=SKIP_KEYS.map(function(k){ return SKIP[k]?'1':'0'; }).join('');
+  var s=vals+'.'+bat+'.'+skipBits;
+  var url=new URL(window.location.href);
+  url.search='';
+  url.searchParams.set('s',s);
+  return url.toString();
+}
+
+document.addEventListener('click', function(e){
+  if(e.target.id!=='btn-share') return;
+  var url=buildShareURL();
+  var btn=e.target;
+  function flash(){
+    var orig=btn.textContent;
+    btn.textContent='Link copied!';
+    btn.classList.add('copied');
+    setTimeout(function(){ btn.textContent=orig; btn.classList.remove('copied'); },1800);
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(flash).catch(function(){ prompt('Copy this link:',url); });
+  } else {
+    prompt('Copy this link:',url);
+  }
+});
+
+loadFromURL();
 build();
+Object.keys(SKIPMAP).forEach(syncSkip);
+(function(){ var bat=el('btn-bat'); if(bat && S.batteryOn){ bat.classList.add('on'); bat.setAttribute('aria-pressed',true); } })();
 update();
 </script>
 </body>
