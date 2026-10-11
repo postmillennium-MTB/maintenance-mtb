@@ -93,6 +93,28 @@ These are ballpark figures, not measured data. They're calibrated to feel reason
 
 ---
 
+## Printing and PDF export
+
+The page has a dedicated print stylesheet (one `@media print` block at the end of the `<style>` section, with a header comment explaining each group). Use the **Print / save as PDF** button, or Ctrl/Cmd+P, then choose "Save as PDF".
+
+What it does:
+
+- Two pages, Letter or A4 (no fixed paper size is forced; margins only)
+- Prints correctly whether or not "Background graphics" is ticked (`print-color-adjust: exact`)
+- Print-only colors (`--p-*` tokens): all text at 4.8:1 or better against white, hairlines darkened so they survive a laser printer
+- Grayscale-safe: breakdown bar uses solid / hatch / dot / plain textures, skipped items use strike-through plus a "SKIPPED" tag, the e-bike switch prints as ON / OFF
+- Ride Worksheet is opened for the print job and restored afterward
+- Cards and slider rows never split across a page break
+- Footer with a QR code to postmillenniumrenaissance.com, the URL as text, and the print date
+
+**The QR code is static.** It is an inline SVG (error-correction level Q, 4-module quiet zone) generated once, so the tool stays zero-dependency. Changing the destination URL means regenerating it; it is not computed at runtime.
+
+**Inside an iframe:** Ctrl+P on a parent page prints the wrapper, not the tool. The Print button calls `window.print()` from inside the frame, which prints the tool alone.
+
+**Print QA checklist (run on every change to layout or colors):** print to PDF on Letter and A4; look at it in grayscale; confirm 2 pages with nothing split mid-card; scan the QR from the PDF; test a state with skipped items and the battery switch on.
+
+---
+
 ## Technical notes
 
 **Zero dependencies.** The tool is a single `index.html` file with no frameworks, no build step, and no CDN requests (Google Fonts is the only external link, and it degrades gracefully to system fonts if unavailable). Vanilla HTML, CSS, and JavaScript only.

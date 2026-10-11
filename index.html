@@ -25,6 +25,11 @@ h1{font-size:1.5rem;font-weight:700}
 .big-mo{font-family:'JetBrains Mono',monospace;font-size:.875rem;color:#A1A1AA;margin-top:.125rem}
 .bar-wrap{display:flex;height:10px;border-radius:999px;overflow:hidden;background:#F4F4F5;margin-bottom:.75rem}
 .bar-seg{height:100%;transition:width .2s}
+/* Category colors live here ONCE; the breakdown bar and its legend dots both use them (the print block re-skins them with patterns). */
+.cat-susp{background:#0E7490}
+.cat-dt{background:#06B6D4}
+.cat-on{background:#A1A1AA}
+.cat-anc{background:#D4D4D8}
 .legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem 1rem}
 .legend-item{display:flex;align-items:center;gap:.5rem;font-size:.75rem}
 .legend-dot{width:8px;height:8px;border-radius:999px;flex-shrink:0}
@@ -113,6 +118,111 @@ details.ws[open] .chevron{transform:rotate(180deg)}
 .go-line{font-size:.55rem;color:#FAFAFA;line-height:2.1}
 .go-hint{font-size:.5rem;color:#FDE047;margin-top:1.75rem;animation:goBlink 1s steps(1) infinite}
 @keyframes goBlink{50%{opacity:0}}
+/* ══════════════════════════════════════════════════════════════════════════
+   PRINT / PDF  —  everything that only applies on paper or "Save as PDF".
+   Screen styles above are untouched; this block overrides them LAST, so same-
+   specificity rules win by order. Why each group exists:
+     1. print-color-adjust:exact — browsers DROP CSS backgrounds when printing
+        unless the user ticks "Background graphics". Without this the breakdown
+        bar, legend dots, slider thumbs and toggle all vanish (verified).
+     2. Contrast — screen greys (#A1A1AA = 2.56:1, borders 1.1-1.3:1) turn to
+        mush on paper. Print uses the --p-* tokens below, all >= 4.8:1 for text.
+     3. Never color alone — grayscale printers collapse cyan/grey/teal/red to
+        near-identical greys, so bar segments get hatch/dot patterns too.
+     4. Layout — the 30rem phone column becomes a two-column page; cards and
+        rows never split across a page break.
+     5. Interactive-only chrome (buttons, skip chips, chevrons, overlay) hides.
+   TO RE-TINT PRINT: edit the --p-* tokens only. Test in color AND grayscale.
+   ══════════════════════════════════════════════════════════════════════════ */
+.print-foot{display:none}
+@media print{
+:root{--p-ink:#000;--p-ink2:#27272A;--p-muted:#52525B;--p-accent:#0B5568;--p-rule:#71717A;--p-hair:#A1A1AA}
+/* Margin only — NO fixed paper size, so Letter and A4 both work. .5in leaves room for
+   the browser's own header/footer if the user leaves them on. */
+@page{margin:.5in}
+*{-webkit-print-color-adjust:exact;print-color-adjust:exact;box-shadow:none!important;transition:none!important;animation:none!important}
+body{background:#fff;color:var(--p-ink)}
+
+/* ── Chrome that is meaningless on paper ── */
+.reset-btn,.share-btn,.ws-apply,.chevron,.bat-egg,#go-overlay,.skip-btn:not(.active){display:none!important}
+.skip-btn.active{border:1px solid var(--p-ink2);background:#fff;color:var(--p-ink2);font-size:.75rem}
+.pmr-badge{width:44px;height:44px}
+
+/* ── Layout: two columns, sections reordered so the worksheet lands last ── */
+.wrap{max-width:none;padding:0;display:grid;grid-template-columns:1fr 1fr;column-gap:.25in;align-items:start}
+.top-row,.sections,details.ws,.footnote,.print-foot{grid-column:1/-1}
+.sections{order:1}details.ws{order:2}.footnote{order:3}.print-foot{order:4}
+.sub-head{margin-bottom:.75rem}
+.card,details.ws{border:1px solid var(--p-rule);border-radius:.5rem;padding:.7rem .9rem;margin-bottom:.6rem;break-inside:avoid;page-break-inside:avoid}
+.gauge-card{padding:.75rem 1rem;border-radius:.5rem}
+#gauge-svg{display:block;width:100%;max-width:14rem;margin:0 auto}   /* full-width gauge made this row the tallest thing on page 1 */
+/* Grid of whole rows (susp | dt), then the two wide cards full-width. Row-SPANNING items and one tall column both
+   failed: a spanning item cannot split across pages and stranded page 1 half-empty. Consumables (8 rows) is the tallest
+   card, so inside it the rows flow into two columns to halve its height. */
+.sections{display:grid;grid-template-columns:1fr 1fr;column-gap:.25in;row-gap:.6rem;align-items:start}
+.sections .card{margin-bottom:0}
+#sec-on,#sec-anc{grid-column:1/-1}
+#sec-on{order:1}   /* Ancillary is short: lift it onto page 1 under susp|dt, leaving the big Consumables card + worksheet + QR for page 2 */
+#sec-on .divide{column-count:2;column-gap:.25in}
+#sec-on .divide>.item:nth-child(5){border-top:0}   /* first row of the 2nd column: no rule above it */
+h1,h2,.section-title,.section-head{break-after:avoid;page-break-after:avoid}
+.item,.toggle-row,.ws-cell{break-inside:avoid;page-break-inside:avoid}
+.item{padding:.38rem 0}.item-head{margin-bottom:.15rem}.ticks{margin-top:0}
+.toggle-row{padding:.4rem 0}
+.divide>*+*{border-top:1px solid var(--p-hair)}
+.ws-divider{display:none}
+
+/* ── Contrast: type ── */
+.eyebrow,.section-total,.toggle-amt,.ws-num,.ws-group,.badge,.share-btn{color:var(--p-accent)}
+.sub-head,.gauge-labels,.big-num small,.big-mo,.legend-name,.section-sub,.ticks,.toggle-desc,.ws-miles,.ws-cap,.ws-note,.footnote,.skip-btn{color:var(--p-muted)}
+.section-title,.item-label,.legend-amt,.ws-result-title{color:var(--p-ink2)}
+.item-val,.big-num{color:var(--p-ink)}
+.item.skipped .item-label,.item.skipped .item-val{color:var(--p-muted)}   /* strike-through carries the meaning, not the grey */
+/* Floor for small type: 0.75rem = 12px = 9pt. Screen goes down to 0.58rem (7pt), too small on paper. */
+.eyebrow,.gauge-labels,.ticks,.badge,.ws-miles,.ws-cap,.ws-note,.footnote,.ws-group,.legend-item,.section-sub,.toggle-desc{font-size:.75rem}
+.badge{border-color:var(--p-accent)}.badge-btn,.badge-btn:hover{background:#fff}
+
+/* ── Contrast: graphics ── */
+#g-track{stroke:#D4D4D8}
+#gauge-svg line{stroke:var(--p-muted)}
+.bar-wrap{height:14px;border:1px solid var(--p-ink2);background:#fff}
+.bar-seg{border-right:1.5px solid #fff}
+.legend-grid{grid-template-columns:1fr;gap:.35rem}
+.legend-dot{width:14px;height:14px;border-radius:2px;border:1px solid var(--p-ink2)}
+/* Hatch / dot / solid / plain: four textures that survive a grayscale printer (colors alone do not). */
+.cat-susp{background:var(--p-accent)}
+.cat-dt{background:#06B6D4 repeating-linear-gradient(45deg,rgba(0,0,0,.7) 0 1.5px,transparent 1.5px 4.5px)}
+.cat-on{background:#fff radial-gradient(var(--p-ink2) 1.1px,transparent 1.4px) 0 0/4px 4px}
+.cat-anc{background:#fff}
+
+/* ── Controls rendered as static readouts ── */
+input[type=range]::-webkit-slider-runnable-track{background:var(--p-hair);height:4px}
+input[type=range]::-moz-range-track{background:var(--p-hair);height:4px}
+input[type=range]::-webkit-slider-thumb{background:var(--p-ink);border:1px solid var(--p-ink);width:14px;height:14px;margin-top:-5px}
+input[type=range]::-moz-range-thumb{background:var(--p-ink);border:1px solid var(--p-ink);width:14px;height:14px}
+.item.skipped input[type=range]{opacity:.45}
+/* The e-bike switch becomes a word (ON / OFF); a white knob on a white page shows nothing. */
+.switch,.switch.on{width:auto;height:auto;padding:.1rem .55rem;border:1.5px solid var(--p-ink2);background:#fff;color:var(--p-ink2);font:700 .75rem/1.4 'JetBrains Mono',monospace}
+.switch.on{background:var(--p-accent);border-color:var(--p-accent);color:#fff}
+.knob{display:none}
+.switch::after{content:"OFF"}.switch.on::after{content:"ON"}
+
+/* ── Ride Worksheet: forced open by the beforeprint hook; lay its 3 rider profiles side by side ── */
+details.ws summary{padding:0 0 .5rem;list-style:none}
+.ws-body{padding:0;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-flow:column;grid-template-rows:auto 1fr;column-gap:.25in}
+.ws-body>.ws-result{grid-column:1/-1;grid-row:3;background:#fff;border:1px solid var(--p-rule);margin-top:.5rem;break-inside:avoid}
+.ws-cell{border-color:var(--p-rule)}
+.ws-num{font-size:1.25rem}
+
+/* ── Footer: QR + visible URL ── */
+.print-foot{display:flex;align-items:center;gap:.25in;margin-top:.5rem;padding-top:.6rem;border-top:1.5px solid var(--p-ink2);break-inside:avoid}
+.print-foot .qr{width:1.2in;height:1.2in;flex-shrink:0;display:block}  /* ~0.7mm per module: scans reliably well below this, but don't go under ~0.8in */
+.print-foot-text{font-size:.8rem;line-height:1.5;color:var(--p-ink2)}
+.print-foot-text strong{color:var(--p-ink)}
+.print-foot-title{font-weight:700;font-size:1rem;color:var(--p-ink)}
+.print-foot-date{margin-top:.25rem;color:var(--p-muted)}
+.footnote{margin-top:.5rem}
+}
 </style>
 </head>
 <body>
@@ -159,16 +269,16 @@ details.ws[open] .chevron{transform:rotate(180deg)}
   <div class="card">
     <h2 class="section-title" style="margin-bottom:.75rem">Where it goes</h2>
     <div class="bar-wrap">
-      <div class="bar-seg" id="bar-susp" style="background:#0E7490"></div>
-      <div class="bar-seg" id="bar-dt"   style="background:#06B6D4"></div>
-      <div class="bar-seg" id="bar-on"   style="background:#A1A1AA"></div>
-      <div class="bar-seg" id="bar-anc"  style="background:#D4D4D8"></div>
+      <div class="bar-seg cat-susp" id="bar-susp"></div>
+      <div class="bar-seg cat-dt" id="bar-dt"></div>
+      <div class="bar-seg cat-on" id="bar-on"></div>
+      <div class="bar-seg cat-anc" id="bar-anc"></div>
     </div>
     <div class="legend-grid">
-      <div class="legend-item"><span class="legend-dot" style="background:#0E7490"></span><span class="legend-name">Suspension</span><span class="legend-amt" id="leg-susp">$0</span></div>
-      <div class="legend-item"><span class="legend-dot" style="background:#06B6D4"></span><span class="legend-name">Drivetrain</span><span class="legend-amt" id="leg-dt">$0</span></div>
-      <div class="legend-item"><span class="legend-dot" style="background:#A1A1AA"></span><span class="legend-name">Ongoing</span><span class="legend-amt"  id="leg-on">$0</span></div>
-      <div class="legend-item"><span class="legend-dot" style="background:#D4D4D8"></span><span class="legend-name">Ancillary</span><span class="legend-amt" id="leg-anc">$0</span></div>
+      <div class="legend-item"><span class="legend-dot cat-susp"></span><span class="legend-name">Suspension</span><span class="legend-amt" id="leg-susp">$0</span></div>
+      <div class="legend-item"><span class="legend-dot cat-dt"></span><span class="legend-name">Drivetrain</span><span class="legend-amt" id="leg-dt">$0</span></div>
+      <div class="legend-item"><span class="legend-dot cat-on"></span><span class="legend-name">Ongoing</span><span class="legend-amt"  id="leg-on">$0</span></div>
+      <div class="legend-item"><span class="legend-dot cat-anc"></span><span class="legend-name">Ancillary</span><span class="legend-amt" id="leg-anc">$0</span></div>
     </div>
   </div>
 
@@ -218,7 +328,21 @@ details.ws[open] .chevron{transform:rotate(180deg)}
 
   <button class="reset-btn" id="btn-reset">Reset to defaults</button>
   <button class="share-btn" id="btn-share">Copy share link</button>
+  <button class="share-btn print-btn" id="btn-print">Print / save as PDF</button>
   <p class="footnote">* Interval not specified in original spec &#8212; defaulted to annual (24 months for pivot bearings). Defaults reflect typical US retail pricing; adjust to your setup.</p>
+
+  <!-- Print-only footer (hidden on screen). QR is a STATIC inline SVG, so the file stays zero-dependency.
+       Encodes https://www.postmillenniumrenaissance.com/ — error-correction level Q (survives toner
+       streaks / a fold), 4-module white quiet zone baked in. To change the URL the QR must be
+       regenerated (it is not computed at runtime). Visible URL text sits beside it as the fallback. -->
+  <div class="print-foot">
+    <svg class="qr" viewBox="0 0 41 41" shape-rendering="crispEdges" role="img" aria-label="QR code linking to postmillenniumrenaissance.com"><rect width="41" height="41" fill="#fff"/><path fill="#000" d="M4 4h7v1h-7zM17 4h1v1h-1zM22 4h1v1h-1zM27 4h1v1h-1zM30 4h7v1h-7zM4 5h1v1h-1zM10 5h1v1h-1zM14 5h1v1h-1zM16 5h2v1h-2zM22 5h2v1h-2zM26 5h1v1h-1zM28 5h1v1h-1zM30 5h1v1h-1zM36 5h1v1h-1zM4 6h1v1h-1zM6 6h3v1h-3zM10 6h1v1h-1zM12 6h3v1h-3zM16 6h1v1h-1zM19 6h4v1h-4zM24 6h2v1h-2zM27 6h1v1h-1zM30 6h1v1h-1zM32 6h3v1h-3zM36 6h1v1h-1zM4 7h1v1h-1zM6 7h3v1h-3zM10 7h1v1h-1zM13 7h2v1h-2zM16 7h1v1h-1zM19 7h3v1h-3zM26 7h2v1h-2zM30 7h1v1h-1zM32 7h3v1h-3zM36 7h1v1h-1zM4 8h1v1h-1zM6 8h3v1h-3zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h5v1h-5zM20 8h2v1h-2zM23 8h1v1h-1zM25 8h1v1h-1zM27 8h1v1h-1zM30 8h1v1h-1zM32 8h3v1h-3zM36 8h1v1h-1zM4 9h1v1h-1zM10 9h1v1h-1zM12 9h1v1h-1zM15 9h5v1h-5zM21 9h1v1h-1zM24 9h3v1h-3zM30 9h1v1h-1zM36 9h1v1h-1zM4 10h7v1h-7zM12 10h1v1h-1zM14 10h1v1h-1zM16 10h1v1h-1zM18 10h1v1h-1zM20 10h1v1h-1zM22 10h1v1h-1zM24 10h1v1h-1zM26 10h1v1h-1zM28 10h1v1h-1zM30 10h7v1h-7zM13 11h2v1h-2zM18 11h1v1h-1zM21 11h1v1h-1zM23 11h3v1h-3zM5 12h1v1h-1zM8 12h1v1h-1zM10 12h1v1h-1zM12 12h1v1h-1zM16 12h2v1h-2zM19 12h1v1h-1zM21 12h1v1h-1zM24 12h3v1h-3zM29 12h1v1h-1zM31 12h2v1h-2zM34 12h1v1h-1zM5 13h5v1h-5zM13 13h2v1h-2zM16 13h7v1h-7zM25 13h3v1h-3zM29 13h1v1h-1zM33 13h3v1h-3zM10 14h4v1h-4zM15 14h3v1h-3zM20 14h1v1h-1zM22 14h1v1h-1zM27 14h1v1h-1zM30 14h1v1h-1zM33 14h1v1h-1zM35 14h1v1h-1zM4 15h1v1h-1zM6 15h1v1h-1zM13 15h1v1h-1zM16 15h2v1h-2zM19 15h2v1h-2zM24 15h3v1h-3zM28 15h2v1h-2zM35 15h1v1h-1zM7 16h1v1h-1zM9 16h2v1h-2zM12 16h2v1h-2zM15 16h1v1h-1zM17 16h1v1h-1zM19 16h2v1h-2zM24 16h5v1h-5zM30 16h1v1h-1zM32 16h2v1h-2zM36 16h1v1h-1zM4 17h1v1h-1zM6 17h1v1h-1zM8 17h1v1h-1zM14 17h1v1h-1zM16 17h2v1h-2zM21 17h4v1h-4zM27 17h1v1h-1zM31 17h1v1h-1zM33 17h1v1h-1zM6 18h2v1h-2zM10 18h1v1h-1zM13 18h2v1h-2zM16 18h4v1h-4zM22 18h1v1h-1zM26 18h2v1h-2zM29 18h2v1h-2zM32 18h1v1h-1zM35 18h1v1h-1zM4 19h1v1h-1zM15 19h1v1h-1zM19 19h1v1h-1zM25 19h1v1h-1zM28 19h5v1h-5zM4 20h3v1h-3zM8 20h3v1h-3zM12 20h1v1h-1zM14 20h1v1h-1zM16 20h1v1h-1zM23 20h6v1h-6zM30 20h1v1h-1zM32 20h2v1h-2zM35 20h1v1h-1zM5 21h1v1h-1zM7 21h2v1h-2zM11 21h2v1h-2zM14 21h1v1h-1zM16 21h2v1h-2zM19 21h1v1h-1zM21 21h2v1h-2zM26 21h3v1h-3zM33 21h2v1h-2zM4 22h2v1h-2zM8 22h3v1h-3zM13 22h3v1h-3zM19 22h1v1h-1zM21 22h1v1h-1zM26 22h3v1h-3zM31 22h1v1h-1zM33 22h1v1h-1zM35 22h1v1h-1zM5 23h1v1h-1zM8 23h1v1h-1zM13 23h1v1h-1zM16 23h5v1h-5zM22 23h1v1h-1zM24 23h2v1h-2zM28 23h4v1h-4zM35 23h1v1h-1zM4 24h1v1h-1zM6 24h5v1h-5zM15 24h1v1h-1zM17 24h1v1h-1zM20 24h2v1h-2zM24 24h3v1h-3zM28 24h1v1h-1zM30 24h1v1h-1zM32 24h2v1h-2zM35 24h1v1h-1zM4 25h2v1h-2zM9 25h1v1h-1zM15 25h1v1h-1zM17 25h1v1h-1zM19 25h2v1h-2zM23 25h2v1h-2zM27 25h1v1h-1zM31 25h1v1h-1zM34 25h2v1h-2zM7 26h2v1h-2zM10 26h2v1h-2zM13 26h2v1h-2zM16 26h1v1h-1zM18 26h2v1h-2zM21 26h1v1h-1zM24 26h2v1h-2zM27 26h3v1h-3zM31 26h1v1h-1zM33 26h3v1h-3zM6 27h1v1h-1zM9 27h1v1h-1zM11 27h1v1h-1zM13 27h1v1h-1zM17 27h2v1h-2zM20 27h2v1h-2zM23 27h5v1h-5zM29 27h2v1h-2zM36 27h1v1h-1zM4 28h3v1h-3zM9 28h2v1h-2zM12 28h2v1h-2zM15 28h1v1h-1zM19 28h1v1h-1zM21 28h2v1h-2zM24 28h3v1h-3zM28 28h5v1h-5zM35 28h1v1h-1zM12 29h2v1h-2zM15 29h4v1h-4zM20 29h2v1h-2zM25 29h1v1h-1zM27 29h2v1h-2zM32 29h1v1h-1zM34 29h2v1h-2zM4 30h7v1h-7zM13 30h1v1h-1zM15 30h2v1h-2zM18 30h3v1h-3zM22 30h1v1h-1zM24 30h1v1h-1zM28 30h1v1h-1zM30 30h1v1h-1zM32 30h2v1h-2zM35 30h1v1h-1zM4 31h1v1h-1zM10 31h1v1h-1zM13 31h3v1h-3zM18 31h1v1h-1zM22 31h1v1h-1zM25 31h1v1h-1zM28 31h1v1h-1zM32 31h1v1h-1zM36 31h1v1h-1zM4 32h1v1h-1zM6 32h3v1h-3zM10 32h1v1h-1zM12 32h4v1h-4zM17 32h3v1h-3zM21 32h1v1h-1zM24 32h3v1h-3zM28 32h6v1h-6zM4 33h1v1h-1zM6 33h3v1h-3zM10 33h1v1h-1zM13 33h1v1h-1zM17 33h1v1h-1zM19 33h1v1h-1zM22 33h1v1h-1zM24 33h2v1h-2zM27 33h1v1h-1zM30 33h6v1h-6zM4 34h1v1h-1zM6 34h3v1h-3zM10 34h1v1h-1zM13 34h2v1h-2zM17 34h1v1h-1zM22 34h1v1h-1zM24 34h2v1h-2zM29 34h4v1h-4zM4 35h1v1h-1zM10 35h1v1h-1zM12 35h6v1h-6zM20 35h1v1h-1zM24 35h2v1h-2zM27 35h2v1h-2zM4 36h7v1h-7zM13 36h2v1h-2zM16 36h4v1h-4zM21 36h1v1h-1zM24 36h5v1h-5zM36 36h1v1h-1z"/></svg>
+    <div class="print-foot-text">
+      <p class="print-foot-title">Post Millennium Renaissance</p>
+      <p>Scan to explore more interactive MTB tools, or visit <strong>postmillenniumrenaissance.com</strong></p>
+      <p class="print-foot-date">Estimate printed <span id="print-date"></span>. Ballpark figures at typical US retail pricing.</p>
+    </div>
+  </div>
 </div>
 
 <div id="go-overlay" role="alertdialog" aria-label="Game over — brake pads cannot be skipped">
@@ -648,6 +772,32 @@ document.addEventListener('click', function(e){
     prompt('Copy this link:',url);
   }
 });
+
+// ── Print / PDF ────────────────────────────────────────────────────────────
+// A closed <details> prints as just its heading, so the Ride Worksheet (the inputs
+// behind the suggested quantities) would silently vanish from the page. Open it for
+// the print job and put it back afterward. beforeprint/afterprint cover Ctrl+P and
+// the button; the date is also stamped at load for browsers that skip beforeprint.
+var wsWasOpen=null;
+function stampPrintDate(){
+  setText('print-date', new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'}));
+}
+window.addEventListener('beforeprint', function(){
+  var ws=document.querySelector('details.ws');
+  if(ws && wsWasOpen===null){ wsWasOpen=ws.open; ws.open=true; }
+  stampPrintDate();
+});
+window.addEventListener('afterprint', function(){
+  var ws=document.querySelector('details.ws');
+  if(ws && wsWasOpen!==null){ ws.open=wsWasOpen; }
+  wsWasOpen=null;
+});
+// Button: window.print() inside an iframe prints only the frame (Ctrl+P prints the outer page,
+// and the PMR wrapper iframe would be clipped to one screenful), so this is the reliable path.
+document.addEventListener('click', function(e){
+  if(e.target.id==='btn-print') window.print();
+});
+stampPrintDate();
 
 loadFromURL();
 build();
