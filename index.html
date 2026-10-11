@@ -92,6 +92,8 @@ details.ws[open] .chevron{transform:rotate(180deg)}
 .share-btn{width:100%;margin-top:.6rem;padding:.75rem;border-radius:.75rem;border:1px solid #D4D4D8;background:#fff;color:#0E7490;font-size:.875rem;font-weight:600;font-family:'Space Grotesk',system-ui,sans-serif;cursor:pointer}
 .share-btn:hover{background:#E0F2FE}
 .share-btn.copied{border-color:#0E7490;background:#E0F2FE}
+.print-btn{display:flex;align-items:center;justify-content:center;gap:.5rem}
+.btn-icon{flex-shrink:0;display:block}   /* display:block removes the inline-SVG baseline gap so the icon centers on the text */
 
 /* ── Skip it ── */
 .skip-btn{font-family:'JetBrains Mono',monospace;font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:.1rem .45rem;border-radius:.375rem;border:1px solid #E4E4E7;background:#fff;color:#A1A1AA;cursor:pointer;flex-shrink:0;line-height:1.4}
@@ -328,7 +330,8 @@ details.ws summary{padding:0 0 .5rem;list-style:none}
 
   <button class="reset-btn" id="btn-reset">Reset to defaults</button>
   <button class="share-btn" id="btn-share">Copy share link</button>
-  <button class="share-btn print-btn" id="btn-print">Print / save as PDF</button>
+  <!-- Icon: Lucide "printer" (ISC licence), inline so the file stays zero-dependency. stroke=currentColor, so it follows the button text color. -->
+  <button class="share-btn print-btn" id="btn-print"><svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg><span>Print / save as PDF</span></button>
   <p class="footnote">* Interval not specified in original spec &#8212; defaulted to annual (24 months for pivot bearings). Defaults reflect typical US retail pricing; adjust to your setup.</p>
 
   <!-- Print-only footer (hidden on screen). QR is a STATIC inline SVG, so the file stays zero-dependency.
@@ -795,7 +798,7 @@ window.addEventListener('afterprint', function(){
 // Button: window.print() inside an iframe prints only the frame (Ctrl+P prints the outer page,
 // and the PMR wrapper iframe would be clipped to one screenful), so this is the reliable path.
 document.addEventListener('click', function(e){
-  if(e.target.id==='btn-print') window.print();
+  if(e.target.closest && e.target.closest('#btn-print')) window.print();   // closest(): a click on the icon's <svg>/<path> must count too
 });
 stampPrintDate();
 
