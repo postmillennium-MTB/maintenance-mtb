@@ -14,12 +14,13 @@ Live: [postmillennium-mtb.github.io/maintenance-mtb](https://postmillennium-mtb.
 - **Cost dials** for every major service category — suspension, drivetrain, consumables, and ancillary
 - **Clickable interval badges** on chain, cassette, chainring and pivot bearings to cycle between 12 / 24 / 36 month replacement schedules
 - **Annualized math** — every line item is converted to a per-year cost regardless of its service interval, so the grand total is always apples-to-apples
-- **Semicircle gauge** showing Budget / Typical / Premium zones at a glance
+- **Semicircle gauge** showing Budget / Typical / Premium zones at a glance, with the yearly and monthly totals inside the dial
 - **"Where it goes" breakdown bar** showing the proportion of spend across four categories
-- **Ride Worksheet** — a collapsible section where you enter your riding volume (XC rides/week, miles/ride, enduro rides, and bike park days, which can be 0) and the tool suggests how many tires, brake pad sets, rotors, chains per year, and sealant refills you're likely to burn through per year
+- **5-year outlook** — a stacked-bar chart of projected spend per year, with a **Cash timing / Annualized** toggle and a 0–7% inflation dropdown (details below)
+- **Ride Worksheet** — a collapsible section with its own **Reset worksheet to defaults** button (it leaves the cost dials alone), where you enter your riding volume (XC rides/week, miles/ride, enduro rides, and bike park days, which can be 0) and the tool suggests how many tires, brake pad sets, rotors, chains per year, and sealant refills you're likely to burn through per year
 - **Apply to dials** button — pushes all five worksheet suggestions into the dials: tire / pad / rotor quantities, the sealant dial (refills × $25), and the chain interval (chains/yr snapped to 12 / 24 / 36 months). Each value is clamped to its dial's range (max 7 tires, 12 pad sets, 4 rotors)
 - **Share and print icons** — Lucide paper-plane (share) and printer icon buttons sit under the PMR badge at the top. Share turns into a check mark with a "Link copied!" note for 2 seconds. Both are named by `aria-label`, 44px touch targets, and hidden on the printout
-- **Share link** — the paper-plane button copies a link to postmillenniumrenaissance.com/maintenance/ with your settings in the URL hash (`#s=…`). Links in the old `?s=` format still load. Malformed values fall back to defaults and out-of-range values are clamped
+- **Share link** — the paper-plane button copies a link to postmillenniumrenaissance.com/maintenance/ with your settings in the URL hash (`#s=…`), including the 5-year outlook settings. Links in the old `?s=` format still load. Malformed values fall back to defaults and out-of-range values are clamped
 - **E-bike battery toggle** — adds a $25/yr reserve for eventual battery replacement; off by default for analog bikes
 - **Reset to defaults** button
 
@@ -104,16 +105,32 @@ These are ballpark figures, not measured data. They're calibrated to feel reason
 
 ---
 
+## 5-year outlook
+
+The headline number is **annualized**: a $175 cassette on a 24-month interval counts as $87.50 a year. Real cash is lumpier, so the chart shows both views of the next five years:
+
+- **Cash timing** (default): a part is bought when its interval ends. With every part new today, a 24-month chain and cassette land in years 2 and 4, a 36-month chainring in year 3, and annual services every year. Consumables, tires/pads/rotors and the battery reserve are spread evenly. The callout names the peak year and the monthly set-aside (the 5-year average ÷ 12).
+- **Annualized**: every year carries each part's yearly share (a flat run-rate).
+- **Inflation**: 0–7% per year (default 3%). Year 1 is at today's prices; year *n* is multiplied by (1 + rate)^(n−1).
+- **Advanced: months since last replaced** (inside the card): per-part ages from 0–36 months. The first purchase is then due at *interval − age* months; a part already past its interval is replaced now. Default is 0 (new today).
+- A **View as table** section lists every number (per category, total, cumulative), and hovering, tapping or keyboard-focusing a year shows a tooltip.
+
+The 5-year totals differ between the two views because a cycle that has not finished (say, half of a 36-month chainring) is real run-rate but not yet cash. Both totals are shown in the callout.
+
+**Colors.** The four categories use blue / orange / green / violet, validated for colorblind separation (adjacent ΔE ≥ 9, normal-vision ≥ 22). The green is under 3:1 contrast on white, so the legend, a table view and (on paper) textures carry identity too. These are set once in the `SECTIONS` registry.
+
+---
+
 ## Printing and PDF export
 
 The page has a dedicated print stylesheet (one `@media print` block at the end of the `<style>` section, with a header comment explaining each group). Use the **Print / save as PDF** button, or Ctrl/Cmd+P, then choose "Save as PDF".
 
 What it does:
 
-- Two pages, Letter or A4 (no fixed paper size is forced; margins only)
+- Two pages, Letter or A4 (the 5-year chart prints on page 1; Ancillary tucks under Suspension to make room; the chart's controls, advanced inputs and table are screen-only) (no fixed paper size is forced; margins only)
 - Prints correctly whether or not "Background graphics" is ticked (`print-color-adjust: exact`)
 - Print-only colors (`--p-*` tokens): all text at 4.8:1 or better against white, hairlines darkened so they survive a laser printer
-- Grayscale-safe: breakdown bar uses solid / hatch / dot / plain textures, skipped items use strike-through plus a "SKIPPED" tag, the e-bike switch prints as ON / OFF
+- Grayscale-safe: breakdown bar and chart segments use solid / hatch / dot / plain textures, skipped items use strike-through plus a "SKIPPED" tag, the e-bike switch prints as ON / OFF
 - Ride Worksheet is opened for the print job and restored afterward
 - Cards and slider rows never split across a page break
 - Footer with a QR code to postmillenniumrenaissance.com, the URL as text, and the print date
@@ -144,6 +161,21 @@ What it does:
 **How the annualized math works.** Each line item stores a raw cost and a service interval in months. The annualized cost is `cost / (interval_months / 12)`. For example, a $175 cassette on a 24-month interval costs $87.50/yr. All section totals and the grand total sum annualized values only, so the number always represents a true yearly spend estimate regardless of how frequently each item recurs.
 
 **Interval cycling.** Drivetrain interval badges are interactive buttons. Clicking cycles through 12 → 24 → 36 → 12 months and immediately recalculates.
+
+---
+
+## Editing the tool (registries)
+
+All content lives in one contiguous data block at the top of the script, ending at the `END OF DATA` marker. The file-map comment at the top of `index.html` lists every section.
+
+| To add… | Do this |
+|---|---|
+| A line item | One entry in `ITEMS` (put it at the **end** of the array). The slider, skip chip, interval badge, totals, chart, "months since replaced" input and share link all derive from it. |
+| A cost category | One entry in `SECTIONS` (name, color, print texture), then point `ITEMS` entries at it with `sec`. |
+| A worksheet input / result | One entry in `WS_INPUTS` / `WS_RESULTS` (and use it in `suggestions()`). |
+| A wear assumption change | Edit the named constant at the top of the data block, and the README table above. |
+
+**Share links:** `LEGACY_STATE_KEYS` is frozen (it is the positional order every link already shared depends on). Inflation, the chart view, months-since-replaced and anything new travel in an optional named `key:value` part, so adding items never breaks old links.
 
 ---
 
