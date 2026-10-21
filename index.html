@@ -1,4 +1,42 @@
 <!DOCTYPE html>
+<!--
+==================================================================================
+  MTB ANNUAL MAINTENANCE COST CALCULATOR  —  single-file, zero-dependency tool
+  Post Millennium Renaissance  ·  postmillenniumrenaissance.com
+==================================================================================
+
+  FILE MAP  (search the ALL-CAPS section labels to jump; line numbers drift)
+
+  <head> / <style> ............... top of file
+    · BASE, GAUGE, BREAKDOWN ..... cards, the dial (numbers live inside it), the "Where it goes" bar
+    · 5-YEAR OUTLOOK ............. chart marks, tooltip, controls, table
+    · SLIDERS, SKIP, SWITCH ...... line-item rows
+    · WORKSHEET .................. Ride Worksheet incl. the rocking-chair easter egg
+    · REDUCED MOTION ............. honors the OS setting
+    · PRINT / PDF ................ one @media print block (2 pages, grayscale-safe)
+
+  <body> ......................... mostly empty shells that the script fills
+
+  <script>
+    ==== ALL DATA LIVES IN ONE CONTIGUOUS BLOCK AT THE TOP ====
+    · wear-model constants ...... every worksheet assumption, named and commented
+    · SECTIONS registry ......... the cost categories (name, colour, print texture)
+    · ITEMS registry ............ every line item: one entry = slider, totals, chart, share link
+    · WS_GROUPS / WS_INPUTS / WS_RESULTS ... Ride Worksheet
+    ==== everything past "END OF DATA" is logic ====
+    · lineItems() ............... THE yearly-cost calculation; totals, gauge and chart all read it
+    · projection() .............. 5-year spend, cash timing vs annualized
+    · build() / update() ........ page construction and display
+    · renderProjection() ........ the chart, callout and table
+    · share link, print, init
+
+  TO ADD A LINE ITEM:        add ONE entry to ITEMS (at the end of the array).
+  TO ADD A COST CATEGORY:    add ONE entry to SECTIONS, then point ITEMS entries at it.
+  TO ADD A WORKSHEET INPUT:  add ONE entry to WS_INPUTS and use it in suggestions().
+  TO CHANGE A WEAR ASSUMPTION: edit the named constant at the top of the data block (and the README table).
+  SHARE LINKS: LEGACY_STATE_KEYS is frozen. Never reorder it; new settings ride in the named part.
+==================================================================================
+-->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -7,6 +45,15 @@
 <link rel="icon" type="image/png" href="favicon-32x32.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>MTB Annual Maintenance Cost — Post Millennium Renaissance</title>
+<meta name="description" content="Estimate your annual mountain bike maintenance cost by service item, project 5 years of spending, and size replacements from how you actually ride.">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#FAFAFA">
+<meta property="og:type" content="website">
+<meta property="og:title" content="MTB Annual Maintenance Cost — Post Millennium Renaissance">
+<meta property="og:description" content="Estimate your annual mountain bike maintenance cost by service item, project 5 years of spending, and size replacements from how you actually ride.">
+<meta property="og:url" content="https://postmillennium-mtb.github.io/maintenance-mtb/">
+<meta property="og:image" content="https://postmillennium-mtb.github.io/maintenance-mtb/apple-touch-icon.png">
+<meta name="twitter:card" content="summary">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -16,20 +63,18 @@ body{background:#FAFAFA;font-family:'Space Grotesk',system-ui,sans-serif;color:#
 h1{font-size:1.5rem;font-weight:700}
 .sub-head{font-size:.875rem;color:#71717A;margin-top:.25rem;margin-bottom:1.5rem}
 .card{background:#fff;border:1px solid #E4E4E7;border-radius:1rem;padding:1.25rem;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:1rem}
-.gauge-card{border-radius:1.5rem;padding:1.5rem}
-#gauge-svg{width:100%}
-.gauge-labels{display:flex;justify-content:space-between;padding:0 .5rem;margin-top:-.5rem;font-family:'JetBrains Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.04em;color:#71717A}
-.big-total{text-align:center;margin-top:.25rem}
-.big-num{font-family:'JetBrains Mono',monospace;font-size:2.25rem;font-weight:700;font-variant-numeric:tabular-nums}
-.big-num small{font-size:1rem;font-weight:500;color:#71717A;margin-left:.25rem}
-.big-mo{font-family:'JetBrains Mono',monospace;font-size:.875rem;color:#71717A;margin-top:.125rem}
+/* ── Gauge: dial + $ figures in one SVG. Capped at 16rem wide (it used to fill the card) because the figures now sit inside the arc. ── */
+.gauge-card{border-radius:1.5rem;padding:1rem 1.25rem .75rem}
+#gauge-svg{display:block;width:100%;max-width:16rem;margin:0 auto}
+.g-num{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;fill:#18181B}
+.g-yr{font-size:10px;font-weight:500;fill:#71717A}
+.g-mo{font-family:'JetBrains Mono',monospace;font-size:9.5px;fill:#71717A}
+.g-lab{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.04em;fill:#71717A}
 .bar-wrap{display:flex;height:10px;border-radius:999px;overflow:hidden;background:#F4F4F5;margin-bottom:.75rem}
 .bar-seg{height:100%;transition:width .2s}
-/* Category colors live here ONCE; the breakdown bar and its legend dots both use them (the print block re-skins them with patterns). */
-.cat-susp{background:#0E7490}
-.cat-dt{background:#06B6D4}
-.cat-on{background:#A1A1AA}
-.cat-anc{background:#D4D4D8}
+/* Category colours come from the SECTIONS registry (set per element as --cat); the bar, legend dots and chart all use this one rule.
+   The print block re-skins them with textures. */
+.cat{background:var(--cat)}
 .legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem 1rem}
 .legend-item{display:flex;align-items:center;gap:.5rem;font-size:.75rem}
 .legend-dot{width:8px;height:8px;border-radius:999px;flex-shrink:0}
@@ -92,11 +137,69 @@ details.ws[open] .chevron{transform:rotate(180deg)}
 .top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}
 .pmr-badge{flex-shrink:0;width:52px;height:52px;display:block}
 .pmr-badge:hover{opacity:.85}
-.share-btn{width:100%;min-height:44px;margin-top:.6rem;padding:.75rem;border-radius:.75rem;border:1px solid #D4D4D8;background:#fff;color:#0E7490;font-size:.875rem;font-weight:600;font-family:'Space Grotesk',system-ui,sans-serif;cursor:pointer}
-.share-btn:hover{background:#E0F2FE}
-.share-btn.copied{border-color:#0E7490;background:#E0F2FE}
-.print-btn{display:flex;align-items:center;justify-content:center;gap:.5rem}
-.btn-icon{flex-shrink:0;display:block}   /* display:block removes the inline-SVG baseline gap so the icon centers on the text */
+/* Top-right action cluster: the PMR badge with the share + print icon buttons under it.
+   Icons are Lucide (inline SVG, stroke=currentColor, so they follow the text color). Each button is a 44px touch target and is named by aria-label, never by the icon. */
+.top-actions{display:flex;flex-direction:column;align-items:flex-end;gap:.5rem;flex-shrink:0;position:relative}
+.icon-row{display:flex;gap:.5rem}
+.icon-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:.75rem;border:1px solid #D4D4D8;background:#fff;color:#0E7490;cursor:pointer;padding:0}
+.icon-btn:hover{background:#E0F2FE}
+.icon-btn svg{display:block;width:20px;height:20px}   /* display:block removes the inline-SVG baseline gap so the icon centers in the button */
+.icon-btn .ic-done{display:none}
+.icon-btn.copied{border-color:#0E7490;background:#E0F2FE}
+.icon-btn.copied .ic-send{display:none}
+.icon-btn.copied .ic-done{display:block}   /* paper plane swaps to a check mark for 1.8s after the link is copied */
+.copy-tip{position:absolute;right:0;top:100%;margin-top:.35rem;z-index:5;white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:600;color:#0E7490;background:#fff;border:1px solid #0E7490;border-radius:.5rem;padding:.2rem .5rem}
+.copy-tip:empty{display:none}   /* role=status stays in the DOM so screen readers announce the text when it appears */
+
+/* ── Utilities ── */
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ws-rule{border-top:1px solid #F4F4F5}
+
+/* ── Worksheet easter egg: 1 ride/week shows a rocking chair. (Reduced-motion rule below stops the rocking.) ── */
+.rocker{display:inline-block;width:20px;height:20px;vertical-align:middle;transform-origin:50% 88%;animation:rock 1.8s ease-in-out infinite}
+@keyframes rock{0%,100%{transform:rotate(-9deg)}50%{transform:rotate(9deg)}}
+.ws-reset{width:100%;min-height:44px;margin-top:.5rem;border-radius:.5rem;border:1px solid #D4D4D8;background:#fff;color:#52525B;font-size:.8rem;font-weight:500;font-family:'Space Grotesk',system-ui,sans-serif;cursor:pointer}
+.ws-reset:hover{background:#F4F4F5}
+
+/* ── 5-year outlook ── */
+.proj-controls{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .75rem;margin:.5rem 0 .75rem}
+.seg{display:inline-flex;border:1px solid #D4D4D8;border-radius:.75rem;overflow:hidden}
+.seg-btn{min-height:44px;padding:0 .9rem;border:none;background:#fff;color:#3F3F46;font-size:.8rem;font-weight:600;font-family:'Space Grotesk',system-ui,sans-serif;cursor:pointer}
+.seg-btn+.seg-btn{border-left:1px solid #D4D4D8}
+.seg-btn[aria-pressed="true"]{background:#0E7490;color:#fff}
+.infl{display:flex;align-items:center;gap:.4rem;font-size:.75rem;color:#71717A}
+.infl select{min-height:44px;border:1px solid #D4D4D8;border-radius:.75rem;padding:0 .6rem;background:#fff;color:#18181B;font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:600}
+.proj-plot{position:relative}
+#proj-svg{display:block;width:100%;height:auto;overflow:visible}
+/* chart marks: hairline solid recessive grid, muted axis text, bars lift on hover/focus */
+#proj-svg .grid{stroke:#E4E4E7;stroke-width:1}
+#proj-svg .base{stroke:#A1A1AA;stroke-width:1}
+#proj-svg .ax{font-family:'JetBrains Mono',monospace;font-size:8.5px;fill:#71717A}
+#proj-svg .bar-val{font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:700;fill:#3F3F46}
+#proj-svg .seg{fill:var(--cat)}
+#proj-svg .tx{opacity:0}   /* print-only texture overlay */
+#proj-svg .hit{fill:transparent}   /* bigger than the bar: the whole year column is the hover / tap target */
+#proj-svg .slot{outline:none;cursor:default}
+#proj-svg .slot:hover .seg,#proj-svg .slot:focus .seg{filter:brightness(1.12)}
+#proj-svg .slot:focus .hit{fill:rgba(14,116,144,.07);stroke:#0E7490;stroke-width:1;rx:6}
+.tip{position:absolute;z-index:6;min-width:9.5rem;pointer-events:none;background:#fff;border:1px solid #D4D4D8;border-radius:.5rem;box-shadow:0 4px 12px rgba(0,0,0,.12);padding:.4rem .6rem;font-size:.72rem}
+.tip[hidden]{display:none}
+.tip-year{font-weight:600;color:#3F3F46;margin-bottom:.2rem}
+.tip-row{display:flex;align-items:center;gap:.4rem;color:#52525B;line-height:1.6}
+.tip-key{width:10px;height:3px;border-radius:2px;flex-shrink:0}   /* line key, not a box */
+.tip-val{margin-left:auto;font-family:'JetBrains Mono',monospace;font-weight:700;color:#18181B}
+.tip-total{border-top:1px solid #E4E4E7;margin-top:.2rem;padding-top:.2rem;font-weight:600;color:#3F3F46}
+.proj-side{margin-top:.5rem}
+.proj-callout{font-size:.78rem;color:#3F3F46;line-height:1.55;margin-top:.6rem}
+.proj-callout strong{font-family:'JetBrains Mono',monospace;font-weight:700;color:#18181B}
+details.adv,details.proj-table{border-top:1px solid #F4F4F5;margin-top:.75rem}
+details.adv summary,details.proj-table summary{display:flex;align-items:center;min-height:44px;cursor:pointer;font-size:.8rem;font-weight:600;color:#0E7490}
+details.adv .section-sub{margin-bottom:.4rem}
+.tbl-scroll{overflow-x:auto}   /* 7 columns do not fit a 320px phone; scroll sideways rather than clip */
+details.proj-table table{width:100%;min-width:21rem;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:.68rem;font-variant-numeric:tabular-nums;margin-bottom:.5rem}
+details.proj-table th,details.proj-table td{padding:.3rem .25rem;text-align:right;border-bottom:1px solid #F4F4F5;color:#3F3F46}
+details.proj-table thead th{color:#71717A;font-weight:600}
+details.proj-table th[scope="row"]{text-align:left;color:#71717A}
 
 /* ── Skip it ── */
 .skip-btn{font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;min-height:40px;min-width:40px;padding:.25rem .7rem;border-radius:.375rem;border:1px solid #E4E4E7;background:#fff;color:#71717A;cursor:pointer;flex-shrink:0;line-height:1.4}
@@ -159,7 +262,7 @@ details.ws[open] .chevron{transform:rotate(180deg)}
 body{background:#fff;color:var(--p-ink)}
 
 /* ── Chrome that is meaningless on paper ── */
-.reset-btn,.share-btn,.ws-apply,.ws-apply-note,.chevron,.bat-egg,#go-overlay,.skip-btn:not(.active){display:none!important}   /* .ws-apply-note explains a button that is hidden on paper; it also kept the footer off page 2 */
+.reset-btn,.icon-row,.copy-tip,.ws-apply,.ws-reset,.ws-apply-note,.proj-controls,details.adv,details.proj-table,.tip,.chevron,.bat-egg,#go-overlay,.skip-btn:not(.active){display:none!important}   /* .ws-apply-note explains a button that is hidden on paper; it also kept the footer off page 2 */
 .skip-btn.active{border:1px solid var(--p-ink2);background:#fff;color:var(--p-ink2);font-size:.75rem}
 .pmr-badge{width:44px;height:44px}
 /* Screen touch targets (40px chips, 40px-tall sliders) would bloat the page; paper doesn't need them. */
@@ -171,18 +274,26 @@ input[type=range]{height:5px}   /* original print height; the 40px screen hit ar
 
 /* ── Layout: two columns, sections reordered so the worksheet lands last ── */
 .wrap{max-width:none;padding:0;display:grid;grid-template-columns:1fr 1fr;column-gap:.25in;align-items:start}
-.top-row,.sections,details.ws,.footnote,.print-foot{grid-column:1/-1}
+.top-row,.proj-card,.sections,details.ws,.footnote,.print-foot{grid-column:1/-1}
 .sections{order:1}details.ws{order:2}.footnote{order:3}.print-foot{order:4}
-.sub-head{margin-bottom:.75rem}
-.card,details.ws{border:1px solid var(--p-rule);border-radius:.5rem;padding:.7rem .9rem;margin-bottom:.6rem;break-inside:avoid;page-break-inside:avoid}
+.sub-head{margin-bottom:.4rem}
+.card,details.ws{border:1px solid var(--p-rule);border-radius:.5rem;padding:.6rem .9rem;margin-bottom:.45rem;break-inside:avoid;page-break-inside:avoid}
 .gauge-card{padding:.75rem 1rem;border-radius:.5rem}
-#gauge-svg{display:block;width:100%;max-width:14rem;margin:0 auto}   /* full-width gauge made this row the tallest thing on page 1 */
+#gauge-svg{display:block;width:100%;max-width:11rem;margin:0 auto}   /* full-width gauge made this row the tallest thing on page 1 */
+.g-lab{font-size:10px}.g-mo{font-size:11px}   /* the print gauge is smaller, so its SVG text is bumped to stay >= 7pt */
 /* Grid of whole rows (susp | dt), then the two wide cards full-width. Row-SPANNING items and one tall column both
    failed: a spanning item cannot split across pages and stranded page 1 half-empty. Consumables (8 rows) is the tallest
    card, so inside it the rows flow into two columns to halve its height. */
-.sections{display:grid;grid-template-columns:1fr 1fr;column-gap:.25in;row-gap:.6rem;align-items:start}
+.sections{display:grid;grid-template-columns:1fr 1fr;column-gap:.25in;row-gap:.45rem;align-items:start}
 .sections .card{margin-bottom:0}
-#sec-on,#sec-anc{grid-column:1/-1}
+#sec-on{grid-column:1/-1}
+/* Explicit grid: Suspension | Drivetrain on row 1, with Drivetrain (the taller card) spanning down so the short Ancillary card
+   tucks under Suspension. Earlier row-spanning attempts stranded page 1 half-empty; this one is safe only because the whole
+   block (incl. the 5-year chart above it) fits on page 1 - re-check the page count after any layout change. */
+#sec-susp{grid-column:1;grid-row:1}
+#sec-dt{grid-column:2;grid-row:1/span 2}
+#sec-anc{grid-column:1;grid-row:2}
+#sec-on{grid-row:3}
 #sec-on{order:1}   /* Ancillary is short: lift it onto page 1 under susp|dt, leaving the big Consumables card + worksheet + QR for page 2 */
 #sec-on .divide{column-count:2;column-gap:.25in}
 #sec-on .divide>.item:nth-child(5){border-top:0}   /* first row of the 2nd column: no rule above it */
@@ -194,13 +305,15 @@ h1,h2,.section-title,.section-head{break-after:avoid;page-break-after:avoid}
 .ws-divider{display:none}
 
 /* ── Contrast: type ── */
-.eyebrow,.section-total,.toggle-amt,.ws-num,.ws-group,.badge,.share-btn{color:var(--p-accent)}
-.sub-head,.gauge-labels,.big-num small,.big-mo,.legend-name,.section-sub,.ticks,.toggle-desc,.ws-miles,.ws-cap,.ws-note,.footnote,.skip-btn{color:var(--p-muted)}
+.eyebrow,.section-total,.toggle-amt,.ws-num,.ws-group,.badge{color:var(--p-accent)}
+.sub-head,.legend-name,.section-sub,.ticks,.toggle-desc,.ws-miles,.ws-cap,.ws-note,.footnote,.skip-btn{color:var(--p-muted)}
 .section-title,.item-label,.legend-amt,.ws-result-title{color:var(--p-ink2)}
-.item-val,.big-num{color:var(--p-ink)}
+.item-val{color:var(--p-ink)}
+.g-num{fill:var(--p-ink)}
+.g-yr,.g-mo,.g-lab{fill:var(--p-muted)}
 .item.skipped .item-label,.item.skipped .item-val{color:var(--p-muted)}   /* strike-through carries the meaning, not the grey */
 /* Floor for small type: 0.75rem = 12px = 9pt. Screen goes down to 0.58rem (7pt), too small on paper. */
-.eyebrow,.gauge-labels,.ticks,.badge,.ws-miles,.ws-cap,.ws-note,.footnote,.ws-group,.legend-item,.section-sub,.toggle-desc{font-size:.75rem}
+.eyebrow,.ticks,.badge,.ws-miles,.ws-cap,.ws-note,.footnote,.ws-group,.legend-item,.section-sub,.toggle-desc{font-size:.75rem}
 .badge{border-color:var(--p-accent)}.badge-btn,.badge-btn:hover{background:#fff}
 
 /* ── Contrast: graphics ── */
@@ -209,12 +322,13 @@ h1,h2,.section-title,.section-head{break-after:avoid;page-break-after:avoid}
 .bar-wrap{height:14px;border:1px solid var(--p-ink2);background:#fff}
 .bar-seg{border-right:1.5px solid #fff}
 .legend-grid{grid-template-columns:1fr;gap:.35rem}
+#legend-grid{grid-template-columns:1fr 1fr}   /* 2 columns: the 4-row legend was what made the gauge | breakdown row tall; the saved height is what lets Ancillary sit on page 1 */
 .legend-dot{width:14px;height:14px;border-radius:2px;border:1px solid var(--p-ink2)}
 /* Hatch / dot / solid / plain: four textures that survive a grayscale printer (colors alone do not). */
-.cat-susp{background:var(--p-accent)}
-.cat-dt{background:#06B6D4 repeating-linear-gradient(45deg,rgba(0,0,0,.7) 0 1.5px,transparent 1.5px 4.5px)}
-.cat-on{background:#fff radial-gradient(var(--p-ink2) 1.1px,transparent 1.4px) 0 0/4px 4px}
-.cat-anc{background:#fff}
+.cat.tex-solid{background:var(--cat)}
+.cat.tex-hatch{background:var(--cat) repeating-linear-gradient(45deg,rgba(0,0,0,.7) 0 1.5px,transparent 1.5px 4.5px)}
+.cat.tex-dots{background:#fff radial-gradient(var(--p-ink2) 1.1px,transparent 1.4px) 0 0/4px 4px}
+.cat.tex-plain{background:#fff}
 
 /* ── Controls rendered as static readouts ── */
 input[type=range]::-webkit-slider-runnable-track{background:var(--p-hair);height:4px}
@@ -243,6 +357,23 @@ details.ws summary{padding:0 0 .5rem;list-style:none}
 .print-foot-title{font-weight:700;font-size:1rem;color:var(--p-ink)}
 .print-foot-date{margin-top:.25rem;color:var(--p-muted)}
 .footnote{margin-top:.5rem}
+
+/* ── 5-year outlook on paper: chart left, legend + callout right, so it stays short enough for page 1 ── */
+.proj-body{display:grid;grid-template-columns:1.25fr 1fr;column-gap:.25in;align-items:start}
+.proj-side{margin-top:0}
+.proj-callout{color:var(--p-ink2);font-size:.75rem}
+.proj-callout strong{color:var(--p-ink)}
+#proj-svg{max-width:3.3in}
+#proj-svg .tx{opacity:1}
+#proj-svg .ax,#proj-svg .bar-val{font-size:11px}   /* the chart is ~3.3in wide on paper, so its SVG text is bumped to stay >= 7pt */
+#proj-svg .ax{fill:var(--p-muted)}
+#proj-svg .bar-val{fill:var(--p-ink)}
+#proj-svg .grid{stroke:var(--p-hair)}
+#proj-svg .base{stroke:var(--p-ink2)}
+#proj-svg .seg.tex-plain{fill:#fff;stroke:var(--p-ink2);stroke-width:1}
+.proj-card .section-sub{color:var(--p-muted);margin-bottom:.25rem}
+#sec-anc .section-sub{display:none}   /* its helper line is a screen hint; hiding it is what lets this card sit on page 1 */
+.ws-rule{border-top-color:var(--p-hair)}
 }
 </style>
 </head>
@@ -254,19 +385,28 @@ details.ws summary{padding:0 0 .5rem;list-style:none}
       <h1>MTB Annual Maintenance Cost</h1>
       <p class="sub-head">Dial in each line item to estimate your yearly spend.</p>
     </div>
-    <a href="https://www.postmillenniumrenaissance.com" target="_blank" rel="noopener" class="pmr-badge" aria-label="Visit Post Millennium Renaissance">
-      <svg viewBox="0 0 100 100" width="100%" height="100%">
-        <polygon points="50,2 58,12 69,6 73,18 86,15 86,28 98,32 93,44 100,55 89,61 91,74 78,75 74,88 62,84 55,95 46,86 35,94 30,81 17,82 15,69 3,64 10,53 2,42 14,37 12,24 25,24 28,11 40,15" fill="#B08D57"/>
-        <ellipse cx="50" cy="50" rx="34" ry="24" fill="#FAFAFA"/>
-        <ellipse cx="50" cy="50" rx="30" ry="20" fill="none" stroke="#B08D57" stroke-width="1.5"/>
-        <text x="50" y="58" text-anchor="middle" font-family="'Space Grotesk',system-ui,sans-serif" font-weight="700" font-size="22" fill="#0E5A73">PMR</text>
-      </svg>
-    </a>
+    <div class="top-actions">
+      <a href="https://www.postmillenniumrenaissance.com" target="_blank" rel="noopener" class="pmr-badge" aria-label="Visit Post Millennium Renaissance">
+        <svg viewBox="0 0 100 100" width="100%" height="100%">
+          <polygon points="50,2 58,12 69,6 73,18 86,15 86,28 98,32 93,44 100,55 89,61 91,74 78,75 74,88 62,84 55,95 46,86 35,94 30,81 17,82 15,69 3,64 10,53 2,42 14,37 12,24 25,24 28,11 40,15" fill="#B08D57"/>
+          <ellipse cx="50" cy="50" rx="34" ry="24" fill="#FAFAFA"/>
+          <ellipse cx="50" cy="50" rx="30" ry="20" fill="none" stroke="#B08D57" stroke-width="1.5"/>
+          <text x="50" y="58" text-anchor="middle" font-family="'Space Grotesk',system-ui,sans-serif" font-weight="700" font-size="22" fill="#0E5A73">PMR</text>
+        </svg>
+      </a>
+      <!-- Icons: Lucide "send" (paper plane = share), "check" (copied confirmation) and "printer" (ISC licence), inline so the file stays zero-dependency. -->
+      <div class="icon-row">
+        <button type="button" class="icon-btn" id="btn-share" aria-label="Copy share link" title="Copy share link"><svg class="lucide lucide-send ic-send" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg><svg class="lucide lucide-check ic-done" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg></button>
+        <button type="button" class="icon-btn" id="btn-print" aria-label="Print or save as PDF" title="Print or save as PDF"><svg class="lucide lucide-printer" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg></button>
+      </div>
+      <span class="copy-tip" id="copy-tip" role="status" aria-live="polite"></span>
+    </div>
   </div>
 
-  <!-- Gauge -->
+  <!-- Gauge: the arc, zone fills, marker dot, $ figures and zone labels all live in this one SVG (ids g-*, grand-*).
+       initGauge()/updateGauge() set the geometry and numbers; nothing here is typed twice. -->
   <div class="card gauge-card">
-    <svg id="gauge-svg" viewBox="0 0 200 118">
+    <svg id="gauge-svg" viewBox="0 0 200 118" role="img" aria-label="Estimated annual maintenance cost">
       <path id="g-track" fill="none" stroke="#E4E4E7" stroke-width="14" stroke-linecap="round"/>
       <path id="g-z0" fill="none" stroke="#0E7490" stroke-width="14" stroke-linecap="round"/>
       <path id="g-z1" fill="none" stroke="#D97706" stroke-width="14" stroke-linecap="round"/>
@@ -276,34 +416,57 @@ details.ws summary{padding:0 0 .5rem;list-style:none}
       <line id="g-t2" stroke="#A1A1AA" stroke-width="2"/>
       <line id="g-t3" stroke="#A1A1AA" stroke-width="2"/>
       <line id="g-t4" stroke="#A1A1AA" stroke-width="2"/>
-      <line id="g-needle" x1="100" y1="96" stroke="#18181B" stroke-width="3" stroke-linecap="round"/>
-      <circle cx="100" cy="96" r="7" fill="#18181B"/>
+      <circle id="g-dot" r="6.5" fill="#18181B" stroke="#fff" stroke-width="2"/>
+      <text class="g-num" x="100" y="77" text-anchor="middle"><tspan id="grand-total">$0</tspan><tspan class="g-yr" dx="3">/yr</tspan></text>
+      <text class="g-mo" id="grand-mo" x="100" y="93" text-anchor="middle">approx. $0/mo</text>
+      <text class="g-lab" x="28" y="113" text-anchor="middle">BUDGET</text>
+      <text class="g-lab" x="100" y="113" text-anchor="middle">TYPICAL</text>
+      <text class="g-lab" x="172" y="113" text-anchor="middle">PREMIUM</text>
     </svg>
-    <div class="gauge-labels"><span>Budget</span><span>Typical</span><span>Premium</span></div>
-    <div class="big-total">
-      <div class="big-num" id="grand-total">$0<small>/yr</small></div>
-      <div class="big-mo" id="grand-mo">approx. $0/mo</div>
-    </div>
   </div>
 
-  <!-- Breakdown -->
+  <!-- Breakdown bar + legend: BUILT FROM THE `SECTIONS` REGISTRY in the script below. -->
   <div class="card">
     <h2 class="section-title" style="margin-bottom:.75rem">Where it goes</h2>
-    <div class="bar-wrap">
-      <div class="bar-seg cat-susp" id="bar-susp"></div>
-      <div class="bar-seg cat-dt" id="bar-dt"></div>
-      <div class="bar-seg cat-on" id="bar-on"></div>
-      <div class="bar-seg cat-anc" id="bar-anc"></div>
-    </div>
-    <div class="legend-grid">
-      <div class="legend-item"><span class="legend-dot cat-susp"></span><span class="legend-name">Suspension</span><span class="legend-amt" id="leg-susp">$0</span></div>
-      <div class="legend-item"><span class="legend-dot cat-dt"></span><span class="legend-name">Drivetrain</span><span class="legend-amt" id="leg-dt">$0</span></div>
-      <div class="legend-item"><span class="legend-dot cat-on"></span><span class="legend-name">Ongoing</span><span class="legend-amt"  id="leg-on">$0</span></div>
-      <div class="legend-item"><span class="legend-dot cat-anc"></span><span class="legend-name">Ancillary</span><span class="legend-amt" id="leg-anc">$0</span></div>
-    </div>
+    <div class="bar-wrap" id="bar-wrap"></div>
+    <div class="legend-grid" id="legend-grid"></div>
   </div>
 
-  <!-- Ride Worksheet -->
+  <!-- 5-year outlook. Controls, chart, table and the "months since last replaced" inputs are all filled in by
+       renderProjection() / buildAdvanced(); the numbers come from projection(), which reads the same lineItems()
+       the gauge uses, so the chart and the dial cannot disagree. -->
+  <div class="card proj-card" id="proj-card">
+    <div class="section-head"><h2 class="section-title">5-year outlook</h2><span class="section-total" id="proj-total"></span></div>
+    <p class="section-sub" id="proj-assume"></p>
+    <div class="proj-controls">
+      <div class="seg" role="group" aria-label="Spending view">
+        <button type="button" class="seg-btn" data-view="1" aria-pressed="true">Cash timing</button>
+        <button type="button" class="seg-btn" data-view="0" aria-pressed="false">Annualized</button>
+      </div>
+      <label class="infl">Inflation <select id="inflation" data-key="inflation" aria-label="Annual price inflation"></select></label>
+    </div>
+    <div class="proj-body">
+      <div class="proj-plot">
+        <svg id="proj-svg" viewBox="0 0 340 196" role="img" aria-label="Projected maintenance spend by year"></svg>
+        <div class="tip" id="proj-tip" hidden></div>
+      </div>
+      <div class="proj-side">
+        <div class="legend-grid" id="proj-legend"></div>
+        <p class="proj-callout" id="proj-callout"></p>
+      </div>
+    </div>
+    <details class="adv" id="adv">
+      <summary>Advanced: months since last replaced</summary>
+      <p class="section-sub">Default is a brand-new part today. Enter how old each part really is and the cash view moves its first replacement earlier. Parts already past their interval are replaced now.</p>
+      <div class="divide" id="adv-body"></div>
+    </details>
+    <details class="proj-table">
+      <summary>View as table</summary>
+      <div class="tbl-scroll"><table id="proj-table"></table></div>
+    </details>
+  </div>
+
+  <!-- Ride Worksheet: input groups are BUILT FROM `WS_GROUPS` / `WS_INPUTS`, result cells from `WS_RESULTS`. -->
   <details class="ws">
     <summary>
       <div>
@@ -312,45 +475,24 @@ details.ws summary{padding:0 0 .5rem;list-style:none}
       </div>
       <span class="chevron">&#9662;</span>
     </summary>
-    <div class="ws-body">
-      <p class="ws-group">Cross-country / trail</p>
-      <div id="ws-xc"></div>
-      <div class="ws-divider"></div>
-      <p class="ws-group">Enduro / aggressive</p>
-      <div id="ws-end"></div>
-      <div class="ws-divider"></div>
-      <p class="ws-group">Bike park</p>
-      <div id="ws-park"></div>
+    <div class="ws-body" id="ws-body">
       <div class="ws-result">
         <div class="ws-result-top">
           <span class="ws-result-title">Suggested yearly replacements</span>
           <span class="ws-miles" id="ws-miles">0 mi-equiv/yr</span>
         </div>
-        <div class="ws-grid">
-          <div class="ws-cell"><span class="ws-num" id="ws-tires">-</span><span class="ws-cap">Tires</span></div>
-          <div class="ws-cell"><span class="ws-num" id="ws-pads">-</span><span class="ws-cap">Pad sets</span></div>
-          <div class="ws-cell"><span class="ws-num" id="ws-rotors">-</span><span class="ws-cap">Rotors</span></div>
-          <div class="ws-cell"><span class="ws-num" id="ws-chains">-</span><span class="ws-cap">Chains</span></div>
-          <div class="ws-cell"><span class="ws-num" id="ws-sealant">-</span><span class="ws-cap">Sealant</span></div>
-        </div>
-        <button class="ws-apply" id="btn-apply">Apply to dials above &#8593;</button>
+        <div class="ws-grid" id="ws-grid"></div>
+        <button type="button" class="ws-apply" id="btn-apply">Apply to dials above &#8593;</button>
+        <button type="button" class="ws-reset" id="btn-ws-reset">Reset worksheet to defaults</button>
         <p class="ws-note">Ballpark only &#8212; based on ~800 mi rear tire life; bike-park days weighted heavier for braking and cornering load. <span class="ws-apply-note">Apply sets tires, pad sets, rotors, sealant (at ~$25 per refill) and the chain interval; dials cap at 7 tires, 12 pad sets and 4 rotors.</span> Tune the dials yourself after applying.</p>
       </div>
     </div>
   </details>
 
-  <!-- Sections (built by JS) -->
-  <div class="sections">
-    <div class="card" id="sec-susp"></div>
-    <div class="card" id="sec-dt"></div>
-    <div class="card" id="sec-on"></div>
-    <div class="card" id="sec-anc"></div>
-  </div>
+  <!-- Sections (built by JS from `SECTIONS` + `ITEMS`) -->
+  <div class="sections" id="sections"></div>
 
   <button class="reset-btn" id="btn-reset">Reset to defaults</button>
-  <button class="share-btn" id="btn-share">Copy share link</button>
-  <!-- Icon: Lucide "printer" (ISC licence), inline so the file stays zero-dependency. stroke=currentColor, so it follows the button text color. -->
-  <button class="share-btn print-btn" id="btn-print"><svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg><span>Print / save as PDF</span></button>
   <p class="footnote">* Interval not specified in original spec &#8212; defaulted to annual (24 months for pivot bearings). Defaults reflect typical US retail pricing; adjust to your setup.</p>
 
   <!-- Print-only footer (hidden on screen). QR is a STATIC inline SVG, so the file stays zero-dependency.
@@ -377,91 +519,11 @@ details.ws summary{padding:0 0 .5rem;list-style:none}
 </div>
 
 <script>
-// ── State ──────────────────────────────────────────────────────────────────
-var D = {
-  frontSusp:135, rearSusp:150, dropper:75, pivotBearings:150,
-  chain:75, cassette:175, chainring:45, batteryOn:false,
-  chainInt:24, cassetteInt:24, chainringInt:36, pivotInt:24,
-  chainLube:50, sealant:50,
-  tireCost:75, tireQty:2,
-  padCost:25, padQty:2,
-  rotorCost:50, rotorQty:1,
-  ancillary:50,
-  xcRpw:3, xcMpr:12, endRpw:2, endMpr:8, parkDays:5
-};
-var S = Object.assign({}, D);
-var SKIP = {};
-var SKIPMAP = {
-  frontSusp:['frontSusp'], rearSusp:['rearSusp'], dropper:['dropper'], pivotBearings:['pivotBearings'],
-  chain:['chain'], cassette:['cassette'], chainring:['chainring'],
-  chainLube:['chainLube'], sealant:['sealant'],
-  tires:['tireCost','tireQty'], rotors:['rotorCost','rotorQty'],
-  ancillary:['ancillary']
-};
-var INT = [12, 24, 36];   // replacement intervals (months) the badges cycle through
-/* Slider limits per dial: [min, max, step]. This is the single source for every slider's range
-   (sliderH reads it, so the sliders cannot drift from it) AND the clamp applied to values arriving from
-   a share link or from "Apply to dials". Without the clamp a hand-edited link or an extreme worksheet
-   pushed S past the slider's end, so the label and the total disagreed with the slider thumb. */
-var LIMITS = {
-  frontSusp:[110,165,5], rearSusp:[130,200,5], dropper:[50,100,5], pivotBearings:[50,260,5],
-  chain:[50,100,5], cassette:[75,500,5], chainring:[20,100,5],
-  chainLube:[30,100,5], sealant:[25,100,5],
-  tireCost:[50,110,5], tireQty:[1,7,1], padCost:[15,50,5], padQty:[1,12,1],
-  rotorCost:[20,100,5], rotorQty:[0,4,1], ancillary:[10,500,5],
-  xcRpw:[1,7,1], xcMpr:[1,50,1], endRpw:[0,7,1], endMpr:[1,50,1],
-  parkDays:[0,50,1]   // 0 allowed: a rider who never visits a bike park
-};
-function clampKey(k,v){
-  var L=LIMITS[k]; if(!L) return v;
-  var snapped=L[0]+Math.round((v-L[0])/L[2])*L[2];   // snap to the slider's step so 52 becomes 50, not a value the thumb can't show
-  return Math.min(L[1],Math.max(L[0],snapped));
-}
-function nearestInterval(months){
-  return INT.reduce(function(best,m){ return Math.abs(m-months)<Math.abs(best-months)?m:best; }, INT[0]);
-}
-var GMIN=400, GMAX=2600;   // gauge scale in $/yr: needle sits at the left end at GMIN, right end at GMAX
-var ZONES=[{f:0,t:.4,c:'#0E7490'},{f:.4,t:.75,c:'#D97706'},{f:.75,t:1,c:'#DC2626'}];
+/* ================================ DATA ========================================
+   Everything the calculator "knows" lives in this one block: the registries (SECTIONS, ITEMS, WS_*),
+   the wear-model assumptions and the other tuning numbers. Logic starts after END OF DATA.
+   ============================================================================== */
 
-// ── Gauge ──────────────────────────────────────────────────────────────────
-function polar(cx,cy,r,deg){
-  var rad=deg*Math.PI/180;
-  return [cx+r*Math.cos(rad), cy-r*Math.sin(rad)];
-}
-function arc(cx,cy,r,a0,a1){
-  var d='', steps=32;
-  for(var i=0;i<=steps;i++){
-    var a=a0+(a1-a0)*i/steps, p=polar(cx,cy,r,a);
-    d+=(i===0?'M':'L')+' '+p[0].toFixed(2)+' '+p[1].toFixed(2)+' ';
-  }
-  return d.trim();
-}
-function angAt(t){ return 180-180*t; }
-
-(function initGauge(){
-  var cx=100,cy=96,r=72;
-  el('g-track').setAttribute('d', arc(cx,cy,r,180,0));
-  [0,.25,.5,.75,1].forEach(function(tt,i){
-    var a=angAt(tt), p1=polar(cx,cy,r-10,a), p2=polar(cx,cy,r+10,a);
-    var t=el('g-t'+i);
-    t.setAttribute('x1',p1[0].toFixed(2)); t.setAttribute('y1',p1[1].toFixed(2));
-    t.setAttribute('x2',p2[0].toFixed(2)); t.setAttribute('y2',p2[1].toFixed(2));
-  });
-})();
-
-function updateGauge(total){
-  var cx=100,cy=96,r=72;
-  var t=Math.min(1,Math.max(0,(total-GMIN)/(GMAX-GMIN)));
-  ZONES.forEach(function(z,i){
-    var end=Math.min(z.t,t), e=el('g-z'+i);
-    e.setAttribute('d', end>z.f ? arc(cx,cy,r,angAt(z.f),angAt(end)) : '');
-  });
-  var p=polar(cx,cy,r-16,angAt(t));
-  el('g-needle').setAttribute('x2',p[0].toFixed(2));
-  el('g-needle').setAttribute('y2',p[1].toFixed(2));
-}
-
-// ── Wear model ─────────────────────────────────────────────────────────────
 /* ---------- wear-model constants (Ride Worksheet) ----------
    Ballpark figures, not measured data; they are calibrated to feel right for casual, typical and
    park-rat riders. The README's "Ride Worksheet - wear model" section mirrors this list; change both. */
@@ -482,8 +544,224 @@ var MIN_SEALANT_REFILLS=2;     // ...but sealant also dries out with time, so ne
 var SEALANT_REFILL_COST=25;    // $ per refill. Converts refills into the sealant dial; $50 default dial = 2 refills x $25
 var DEFAULT_PARK_RIDE_MI=10;   // ride length assumed for park days if the rider has no trail rides (safety net; XC rides/wk >= 1 today)
 
-var lastSuggestions=null;      // newest result of suggestions(); "Apply to dials" reads it so it applies exactly what is on screen
+/* ---------- other tuning constants ---------- */
+var INT=[12,24,36];            // replacement intervals (months) the badges cycle through
+var GMIN=400, GMAX=2600;       // gauge scale in $/yr: the fill is empty at GMIN and full at GMAX
+var ZONES=[{f:0,t:.4,c:'#0E7490',name:'Budget'},{f:.4,t:.75,c:'#D97706',name:'Typical'},{f:.75,t:1,c:'#DC2626',name:'Premium'}];   // f/t = share of the dial; names feed the gauge's aria-label
+var PROJECTION_YEARS=5;        // length of the outlook chart. Changing it needs no other edit (axis, table and totals follow)
+var INFLATION_CHOICES=[0,1,2,3,4,5,6,7];   // % per year offered in the 5-year outlook's dropdown
+var DEFAULT_INFLATION=3;       // % per year selected on first load
+var MAX_AGE_MONTHS=36;         // top of the "months since last replaced" sliders (= the longest interval)
+var SHARE_BASE_URL='https://www.postmillenniumrenaissance.com/maintenance/';   // share links always point at the PMR page, not the bare github.io frame
 
+/* ==== SECTIONS REGISTRY — the single source of truth for every cost category. ============
+   Drives: the section cards, the "Where it goes" bar + legend, the chart's stacked segments and legend, the table.
+   TO ADD A CATEGORY: add ONE entry here, then give ITEMS entries that point at it with `sec`. Nothing else to edit.
+
+     id       short key; becomes element ids (sec-, t-, bar-, leg-) and the print layout hooks (#sec-on, #sec-anc)
+     title    card heading             legend   short name for bar / chart legends
+     sub      optional line under the heading
+     color    chart + bar fill. These four are the data-viz skill's categorical slots 1-4 (blue, orange, green,
+              violet), validated light-mode: adjacent colorblind separation >= 9, normal-vision >= 22.
+              The green is below 3:1 on white, so every chart ALSO has visible legend labels and a table view.
+     texture  PRINT-ONLY secondary encoding so a grayscale printout still tells categories apart:
+              solid | hatch | dots | plain
+   ============================================================================== */
+var SECTIONS=[
+  {id:'susp',title:'Suspension & Pivots',legend:'Suspension',sub:'Click the pivot badge to cycle 12 / 24 / 36 mo',color:'#2a78d6',texture:'solid'},
+  {id:'dt',  title:'Drivetrain',legend:'Drivetrain',sub:'Click an interval badge to cycle 12 / 24 / 36 mo',color:'#eb6834',texture:'hatch'},
+  {id:'on',  title:'Ongoing Consumables',legend:'Ongoing',sub:'',color:'#1baf7a',texture:'dots'},
+  {id:'anc', title:'Ancillary',legend:'Ancillary',sub:'Tire plugs, quick links, UDH, etc.',color:'#6250d6',texture:'plain'}
+];
+
+/* ==== ITEMS REGISTRY — the single source of truth for every line item. ====================
+   TO ADD A LINE ITEM: add ONE entry here (put it at the END of the array if you can; see the share-link note below).
+   The slider, skip chip, interval badge, totals, "$/yr equiv." line, 5-year chart, share-link value and
+   Reset all derive from it. Defaults, slider limits and skip groups are derived too.
+
+   Fields common to all kinds:  sec (a SECTIONS id) · id (unique) · label · kind
+   kind 'svc'   one cost that recurs every `months` (a service, a replacement part)
+       min max step def   slider range ($) and default
+       months | intKey+defMonths   fixed interval, OR the state key of a clickable 12/24/36 badge and its default
+       badge  text on the plain badge (when the interval is fixed)       assumed  true adds "*" (interval is our assumption)
+       smooth true = a yearly allowance, not a discrete purchase: the 5-year cash view spreads it evenly
+              and it gets no "months since last replaced" input
+       skip   skip-chip group (items sharing a group skip together). `skipEgg:true` = the chip triggers the Game Over joke
+   kind 'unit'  a price x a yearly quantity (two sliders)
+       cost{id,label,min,max,step,def,badge}   qty{id,label,min,max,step,def,unit,badge}   skip   as above
+   kind 'toggle' an on/off yearly reserve:  stateKey · annual ($/yr) · badge · desc (HTML) · egg (text shown while ON)
+
+   SHARE LINKS: the first 25 state values travel in a FROZEN positional order (LEGACY_STATE_KEYS below) so every
+   link already shared keeps working. Anything else (inflation, view, months-since-replaced, new items) rides
+   in a named key:value part, so adding items never breaks old links. ================================== */
+var ITEMS=[
+  {sec:'susp',kind:'svc',id:'frontSusp',label:'Front suspension service',min:110,max:165,step:5,def:135,badge:'Annual',assumed:true,months:12,skip:'frontSusp'},
+  {sec:'susp',kind:'svc',id:'rearSusp',label:'Rear suspension service',min:130,max:200,step:5,def:150,badge:'Annual',assumed:true,months:12,skip:'rearSusp'},
+  {sec:'susp',kind:'svc',id:'dropper',label:'Dropper service',min:50,max:100,step:5,def:75,badge:'Annual',assumed:true,months:12,skip:'dropper'},
+  {sec:'susp',kind:'svc',id:'pivotBearings',label:'Suspension pivot bearings',min:50,max:260,step:5,def:150,intKey:'pivotInt',defMonths:24,skip:'pivotBearings'},
+
+  {sec:'dt',kind:'svc',id:'chain',label:'Chain',min:50,max:100,step:5,def:75,intKey:'chainInt',defMonths:24,skip:'chain'},
+  {sec:'dt',kind:'svc',id:'cassette',label:'Cassette',min:75,max:500,step:5,def:175,intKey:'cassetteInt',defMonths:24,skip:'cassette'},
+  {sec:'dt',kind:'svc',id:'chainring',label:'Chainring',min:20,max:100,step:5,def:45,intKey:'chainringInt',defMonths:36,skip:'chainring'},
+  {sec:'dt',kind:'toggle',id:'battery',stateKey:'batteryOn',label:'Battery wear & tear',badge:'E-bike',annual:25,
+    desc:'Turn on if you ride an e-MTB or have batteries on your rig. Adds a <span class="toggle-amt">$25/yr</span> reserve toward eventual battery replacement &#8212; capacity fades with charge cycles.',
+    egg:"Remember, it's a battery-powered derailleur, not an electric drivetrain."},
+
+  {sec:'on',kind:'svc',id:'chainLube',label:'Chain lube or wax',min:30,max:100,step:5,def:50,badge:'Annual',months:12,smooth:true,skip:'chainLube'},
+  {sec:'on',kind:'svc',id:'sealant',label:'Tubeless sealant',min:25,max:100,step:5,def:50,badge:'Annual',assumed:true,months:12,smooth:true,skip:'sealant'},
+  {sec:'on',kind:'unit',id:'tires',skip:'tires',
+    cost:{id:'tireCost',label:'Tire — price each',min:50,max:110,step:5,def:75,badge:'Per tire'},
+    qty:{id:'tireQty',label:'Tires per year',min:1,max:7,step:1,def:2,unit:' tires',badge:'Qty'}},
+  {sec:'on',kind:'unit',id:'pads',skip:'pads',skipEgg:true,
+    cost:{id:'padCost',label:'Brake pads — price per set',min:15,max:50,step:5,def:25,badge:'Per set'},
+    qty:{id:'padQty',label:'Pad sets per year',min:1,max:12,step:1,def:2,unit:' sets',badge:'Qty'}},
+  {sec:'on',kind:'unit',id:'rotors',skip:'rotors',
+    cost:{id:'rotorCost',label:'Brake rotor — price each',min:20,max:100,step:5,def:50,badge:'Per rotor'},
+    qty:{id:'rotorQty',label:'Rotors per year',min:0,max:4,step:1,def:1,unit:' rotors',badge:'Qty'}},
+
+  {sec:'anc',kind:'svc',id:'ancillary',label:'Incidentals budget',min:10,max:500,step:5,def:50,badge:'Annual',assumed:true,months:12,smooth:true,skip:'ancillary'}
+];
+
+/* FROZEN: the positional share-link order. Never reorder or delete; new settings go in the named part instead. */
+var LEGACY_STATE_KEYS=['frontSusp','rearSusp','dropper','pivotBearings','chain','cassette','chainring',
+  'chainInt','cassetteInt','chainringInt','chainLube','sealant','tireCost','tireQty',
+  'padCost','padQty','rotorCost','rotorQty','ancillary','xcRpw','xcMpr','endRpw','endMpr','parkDays',
+  'pivotInt'];
+
+/* ==== WORKSHEET REGISTRIES ================================================================
+   WS_GROUPS  the input blocks.   WS_INPUTS  one slider each (min/max/step/def; `sub` shows under the slider with
+   {v} = the value; `rocking` = easter egg: a value of 1 shows a rocking chair instead of the sub text).
+   WS_RESULTS the suggestion cells, and what "Apply to dials" does with each one:
+       key      dial that receives the number (clamped to its slider)     perUnit  multiplier first (refills -> $)
+       intKey   instead sets this interval badge from chains/yr           skip     skip-chip group to un-skip
+   TO ADD A WORKSHEET INPUT: one entry in WS_INPUTS (and use it in suggestions()). TO ADD A RESULT: one in WS_RESULTS. */
+var WS_GROUPS=[
+  {id:'xc',title:'Cross-country / trail'},
+  {id:'end',title:'Enduro / aggressive'},
+  {id:'park',title:'Bike park'}
+];
+var WS_INPUTS=[
+  {id:'xcRpw',group:'xc',label:'Rides per week',min:1,max:7,step:1,def:3,unit:' /wk',sub:'{v} rides/wk',rocking:true},
+  {id:'xcMpr',group:'xc',label:'Miles per ride',min:1,max:50,step:1,def:12,unit:' mi',sub:'{v} mi/ride'},
+  {id:'endRpw',group:'end',label:'Rides per week',min:0,max:7,step:1,def:2,unit:' /wk',sub:'{v} rides/wk',rocking:true},
+  {id:'endMpr',group:'end',label:'Miles per ride',min:1,max:50,step:1,def:8,unit:' mi',sub:'{v} mi/ride'},
+  {id:'parkDays',group:'park',label:'Bike park days this season',min:0,max:50,step:1,def:5,unit:' days',sub:'counts ~'+PARK_DAY_TRAIL_RIDES+'x trail wear'}   // 0 allowed: a rider who never visits a bike park
+];
+var WS_RESULTS=[
+  {id:'tires',cap:'Tires',key:'tireQty',skip:'tires'},
+  {id:'pads',cap:'Pad sets',key:'padQty'},
+  {id:'rotors',cap:'Rotors',key:'rotorQty',skip:'rotors'},
+  {id:'chains',cap:'Chains',decimals:1,intKey:'chainInt',skip:'chain'},   // shown per year to one decimal: 0.9 = "about every 13 months", which Apply snaps to 12
+  {id:'sealant',cap:'Sealant',key:'sealant',perUnit:SEALANT_REFILL_COST,skip:'sealant'}
+];
+
+/* Easter egg icon: Lucide "rocking-chair" (ISC licence), inline so the file stays zero-dependency. */
+var ROCKER_SVG='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rocking-chair rocker" aria-hidden="true" focusable="false"><path d="m15 13 3.708 7.416"/><path d="M3 19a15 15 0 0 0 18 0"/><path d="m3 2 3.21 9.633A2 2 0 0 0 8.109 13H18"/><path d="m9 13-3.708 7.416"/></svg>';
+
+/* ================== END OF DATA — everything below is logic ================== */
+
+
+// ── Derived tables (built once from the registries above) ───────────────────
+var D={batteryOn:false,inflation:DEFAULT_INFLATION,cashView:1};   // defaults, one per state key
+var LIMITS={};                    // [min,max,step] per slider key. The single source for slider ranges AND the clamp on shared / applied values
+var SKIPMAP={};                   // skip group -> the slider ids that dim together
+var INTERVAL_KEYS=[];             // state keys of the 12/24/36 badges
+var AGED_ITEMS=[];                // items that get a "months since last replaced" input
+var SECTION_IDS=SECTIONS.map(function(s){ return s.id; });
+(function deriveTables(){
+  function addLimit(k,o){ LIMITS[k]=[o.min,o.max,o.step]; D[k]=o.def; }
+  ITEMS.forEach(function(it){
+    var group=[];
+    if(it.kind==='svc'){
+      addLimit(it.id,it); group.push(it.id);
+      if(it.intKey){ INTERVAL_KEYS.push(it.intKey); D[it.intKey]=it.defMonths; }
+      if(!it.smooth){ AGED_ITEMS.push(it); LIMITS['age_'+it.id]=[0,MAX_AGE_MONTHS,1]; D['age_'+it.id]=0; }
+    } else if(it.kind==='unit'){
+      addLimit(it.cost.id,it.cost); addLimit(it.qty.id,it.qty); group.push(it.cost.id,it.qty.id);
+    } else if(it.kind==='toggle'){
+      D[it.stateKey]=false;
+    }
+    if(it.skip && !it.skipEgg && group.length) SKIPMAP[it.skip]=group;
+  });
+  WS_INPUTS.forEach(function(w){ addLimit(w.id,w); });
+  LIMITS.inflation=[0,7,1];
+  LIMITS.cashView=[0,1,1];
+})();
+var SKIP_KEYS=Object.keys(SKIPMAP);   // skip bits in the share link follow this order (matches the original link format)
+var S=Object.assign({},D);            // live state
+var SKIP={};                          // skip group -> true while skipped
+var lastSuggestions=null;             // newest result of suggestions(); "Apply to dials" reads it so it applies exactly what is on screen
+
+function clampKey(k,v){
+  var L=LIMITS[k]; if(!L) return v;
+  var snapped=L[0]+Math.round((v-L[0])/L[2])*L[2];   // snap to the slider's step so 52 becomes 50, not a value the thumb can't show
+  return Math.min(L[1],Math.max(L[0],snapped));
+}
+function nearestInterval(months){
+  return INT.reduce(function(best,m){ return Math.abs(m-months)<Math.abs(best-months)?m:best; }, INT[0]);
+}
+function monthsOf(it){ return it.intKey?S[it.intKey]:it.months; }
+function isSkipped(it){ return !!(it.skip && SKIP[it.skip]); }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function money(n){ return '$'+Math.round(n).toLocaleString('en-US'); }
+function moneyShort(n){ return n>=1000?'$'+(Math.round(n/100)/10)+'K':'$'+Math.round(n); }
+
+/* Dev safety net: warns in the console if a registry edit is inconsistent (typo'd section id, duplicate id...). */
+(function checkRegistries(){
+  var seen={};
+  function claim(id){ if(seen[id]) console.warn('PMR maintenance: duplicate id "'+id+'" in ITEMS / WS_INPUTS'); seen[id]=1; }
+  ITEMS.forEach(function(it){
+    if(SECTION_IDS.indexOf(it.sec)<0) console.warn('PMR maintenance: item "'+it.id+'" points at unknown section "'+it.sec+'"');
+    if(it.kind==='unit'){ claim(it.cost.id); claim(it.qty.id); } else claim(it.id);
+  });
+  WS_INPUTS.forEach(function(w){ claim(w.id); });
+})();
+
+
+// ── Gauge ──────────────────────────────────────────────────────────────────
+var G_CX=100, G_CY=94, G_R=72;   // dial centre + radius, in the gauge SVG's own units (viewBox 0 0 200 118)
+function polar(cx,cy,r,deg){
+  var rad=deg*Math.PI/180;
+  return [cx+r*Math.cos(rad), cy-r*Math.sin(rad)];
+}
+function arc(cx,cy,r,a0,a1){
+  var d='', steps=32;
+  for(var i=0;i<=steps;i++){
+    var a=a0+(a1-a0)*i/steps, p=polar(cx,cy,r,a);
+    d+=(i===0?'M':'L')+' '+p[0].toFixed(2)+' '+p[1].toFixed(2)+' ';
+  }
+  return d.trim();
+}
+function angAt(t){ return 180-180*t; }
+
+function initGauge(){
+  el('g-track').setAttribute('d', arc(G_CX,G_CY,G_R,180,0));
+  [0,.25,.5,.75,1].forEach(function(tt,i){
+    var a=angAt(tt), p1=polar(G_CX,G_CY,G_R-10,a), p2=polar(G_CX,G_CY,G_R+10,a), t=el('g-t'+i);
+    t.setAttribute('x1',p1[0].toFixed(2)); t.setAttribute('y1',p1[1].toFixed(2));
+    t.setAttribute('x2',p2[0].toFixed(2)); t.setAttribute('y2',p2[1].toFixed(2));
+  });
+}
+
+function updateGauge(total){
+  var t=Math.min(1,Math.max(0,(total-GMIN)/(GMAX-GMIN)));
+  var zoneName=ZONES[0].name;
+  ZONES.forEach(function(z,i){
+    var end=Math.min(z.t,t), e=el('g-z'+i);
+    e.setAttribute('d', end>z.f ? arc(G_CX,G_CY,G_R,angAt(z.f),angAt(end)) : '');
+    if(t>=z.f) zoneName=z.name;
+  });
+  // A dot at the end of the fill replaces the old needle: a needle would cross the $ figures now inside the dial.
+  var p=polar(G_CX,G_CY,G_R,angAt(t));
+  el('g-dot').setAttribute('cx',p[0].toFixed(2));
+  el('g-dot').setAttribute('cy',p[1].toFixed(2));
+  setText('grand-total',money(total));
+  setText('grand-mo','approx. '+money(total/12)+'/mo');
+  el('gauge-svg').setAttribute('aria-label','Estimated annual maintenance cost '+money(total)+' per year, about '+money(total/12)+' per month, '+zoneName+' range');
+}
+
+
+// ── Wear model ─────────────────────────────────────────────────────────────
 function suggestions(){
   var trailMi=(S.xcRpw*S.xcMpr+S.endRpw*S.endMpr)*WEEKS_PER_SEASON;
   var rpw=S.xcRpw+S.endRpw;
@@ -498,206 +776,334 @@ function suggestions(){
     pads:    Math.max(1,Math.round(padMi/PAD_LIFE_MI*BRAKE_COUNT)),
     rotors:  Math.max(0,Math.round(rotorMi/ROTOR_LIFE_MI*ROTOR_COUNT)),
     sealant: Math.max(MIN_SEALANT_REFILLS,Math.round(tireMi/SEALANT_LIFE_MI)),
-    chains:  tireMi/CHAIN_LIFE_MI    // NOT rounded: 0.9 chains/yr means "about every 13 months", which Apply snaps to the 12-month interval
+    chains:  tireMi/CHAIN_LIFE_MI    // NOT rounded: see WS_RESULTS
   };
 }
+
+
+// ── The cost engine ────────────────────────────────────────────────────────
+/* lineItems() is the ONE place a line item's yearly cost is computed. The totals, the gauge, the breakdown bar,
+   the "$/yr equiv." lines and the 5-year chart all read it, so none of them can drift apart.
+   annual = what one year costs on average (cost / (interval in years)); this is the "annualized" number.
+   cost + months + age = the discrete purchase, for the cash-timing view. smooth = no discrete purchases. */
+function lineItems(){
+  return ITEMS.map(function(it){
+    var line={it:it, sec:it.sec, id:it.id, cost:0, months:12, annual:0, smooth:true, age:0};
+    if(it.kind==='svc'){
+      line.months=monthsOf(it); line.cost=S[it.id]; line.annual=line.cost/(line.months/12);
+      line.smooth=!!it.smooth; line.age=S['age_'+it.id]||0;
+    } else if(it.kind==='unit'){
+      line.annual=S[it.cost.id]*S[it.qty.id]; line.cost=line.annual;   // consumed through the year, not bought in lumps
+    } else if(it.kind==='toggle'){
+      line.annual=S[it.stateKey]?it.annual:0; line.cost=line.annual;
+    }
+    if(isSkipped(it)){ line.annual=0; line.cost=0; }
+    return line;
+  });
+}
+function sectionTotals(lines){
+  var t={}; SECTION_IDS.forEach(function(id){ t[id]=0; });
+  lines.forEach(function(l){ t[l.sec]+=l.annual; });
+  return t;
+}
+
+/* projection(): spend for each of the next PROJECTION_YEARS years, two ways.
+     ann  = annualized: every year carries each part's yearly share (cost / interval), so it is a flat run-rate.
+     cash = cash timing: a part is bought when its interval ends, so a 24-month cassette lands in years 2 and 4 and a
+            36-month chainring only in year 3. Smooth items (consumables, allowances) are spread evenly.
+   Year 1 is at today's prices; year n is multiplied by (1+inflation)^(n-1).
+   Timing: first purchase is at (interval - age) months from today; a part already past its interval is replaced
+   now (month 0). A purchase at month m belongs to year ceil(m/12), so month 12 closes year 1. */
+function projection(){
+  var HORIZON_MONTHS=PROJECTION_YEARS*12;
+  var infl=S.inflation/100, lines=lineItems();
+  function blank(){ var r={total:0}; SECTION_IDS.forEach(function(id){ r[id]=0; }); return r; }
+  var ann=[], cash=[];
+  for(var y=0;y<PROJECTION_YEARS;y++){ ann.push(blank()); cash.push(blank()); }
+  function factor(year){ return Math.pow(1+infl,year-1); }
+  lines.forEach(function(l){
+    if(l.annual<=0) return;
+    for(var y=1;y<=PROJECTION_YEARS;y++){
+      ann[y-1][l.sec]+=l.annual*factor(y);
+      if(l.smooth) cash[y-1][l.sec]+=l.annual*factor(y);
+    }
+    if(!l.smooth && l.months>0){
+      var first=l.age>=l.months?0:l.months-l.age;
+      for(var m=first;m<=HORIZON_MONTHS;m+=l.months){
+        var year=Math.max(1,Math.ceil(m/12));
+        cash[year-1][l.sec]+=l.cost*factor(year);
+      }
+    }
+  });
+  [ann,cash].forEach(function(rows){ rows.forEach(function(r){ SECTION_IDS.forEach(function(id){ r.total+=r[id]; }); }); });
+  return {ann:ann,cash:cash};
+}
+
 
 // ── DOM helpers ────────────────────────────────────────────────────────────
 function el(id){ return document.getElementById(id); }
 function setText(id,v){ var e=el(id); if(e) e.textContent=v; }
 function setHTML(id,v){ var e=el(id); if(e) e.innerHTML=v; }
 
-function sliderH(id,label,min,max,step,val,unit,badge,assumed,sub,intKey,skipKey){
-  var L=LIMITS[id]; if(L){ min=L[0]; max=L[1]; step=L[2]; }   // LIMITS wins over the literals passed in build()
-  var disp=unit==='$'?'$'+val:val+unit;
-  var dmin=unit==='$'?'$'+min:min+unit;
-  var dmax=unit==='$'?'$'+max:max+unit;
-  // Plain badge stays beside the label. The clickable chips (interval badge, skip) are 40px touch targets,
-  // so on screen they get their own row under the label instead of squeezing the label and price (print puts them back inline).
-  var bHTML='', chips='';
-  if(badge && intKey){
-    chips='<button class="badge badge-btn" id="ib-'+intKey+'" data-ikey="'+intKey+'">'+badge+' &#10227;</button>';
-  } else if(badge){
-    bHTML='<span class="badge'+(assumed?' badge-a':'')+'">'+badge+(assumed?'*':'')+'</span>';
-  }
-  if(skipKey){
-    chips+='<button class="skip-btn" data-skip="'+skipKey+'" aria-pressed="false">skip it</button>';
-  }
-  return '<div class="item" id="item-'+id+'">'+
+/* One slider row. Range comes from LIMITS (never typed twice). `inline` = plain badge HTML beside the label;
+   `chips` = clickable buttons (interval badge, skip) that get their own 40px-tall row under the label on screen. */
+function sliderHTML(o){
+  var L=LIMITS[o.id], min=L[0], max=L[1], step=L[2];
+  function fmt(v){ return o.unit==='$'?'$'+v:v+o.unit; }
+  return '<div class="item" id="item-'+o.id+'">'+
     '<div class="item-head">'+
-      '<div class="item-label-group">'+
-        '<label for="r-'+id+'" class="item-label">'+label+'</label>'+bHTML+
-      '</div>'+
-      '<span id="v-'+id+'" class="item-val">'+disp+'</span>'+
-      (chips?'<div class="item-chips">'+chips+'</div>':'')+
+      '<div class="item-label-group"><label for="r-'+o.id+'" class="item-label">'+esc(o.label)+'</label>'+(o.inline||'')+'</div>'+
+      '<span id="v-'+o.id+'" class="item-val">'+fmt(S[o.id])+'</span>'+
+      (o.chips?'<div class="item-chips">'+o.chips+'</div>':'')+
     '</div>'+
-    '<input type="range" id="r-'+id+'" data-key="'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'">'+
-    '<div class="ticks"><span>'+dmin+'</span><span id="s-'+id+'">'+sub+'</span><span>'+dmax+'</span></div>'+
+    '<input type="range" id="r-'+o.id+'" data-key="'+o.id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+S[o.id]+'">'+
+    '<div class="ticks"><span>'+fmt(min)+'</span><span id="s-'+o.id+'">'+(o.sub||'')+'</span><span>'+fmt(max)+'</span></div>'+
   '</div>';
 }
+function plainBadge(text,assumed){ return '<span class="badge'+(assumed?' badge-a':'')+'">'+esc(text)+(assumed?'*':'')+'</span>'; }
+function skipChip(group){ return '<button class="skip-btn" data-skip="'+group+'" aria-pressed="false">skip it</button>'; }
 
-// ── Build sections ─────────────────────────────────────────────────────────
-function build(){
-  el('sec-susp').innerHTML=
-    '<div class="section-head"><h2 class="section-title">Suspension &amp; Pivots</h2><span class="section-total" id="t-susp"></span></div>'+
-    '<p class="section-sub">Click the pivot badge to cycle 12 / 24 / 36 mo</p>'+
-    '<div class="divide">'+
-      sliderH('frontSusp','Front suspension service',110,165,5,S.frontSusp,'$','Annual',true,'','','frontSusp')+
-      sliderH('rearSusp','Rear suspension service',130,200,5,S.rearSusp,'$','Annual',true,'','','rearSusp')+
-      sliderH('dropper','Dropper service',50,100,5,S.dropper,'$','Annual',true,'','','dropper')+
-      sliderH('pivotBearings','Suspension pivot bearings',50,260,5,S.pivotBearings,'$',S.pivotInt+' mo',false,'','pivotInt','pivotBearings')+
-    '</div>';
-
-  el('sec-dt').innerHTML=
-    '<div class="section-head"><h2 class="section-title">Drivetrain</h2><span class="section-total" id="t-dt"></span></div>'+
-    '<p class="section-sub">Click an interval badge to cycle 12 / 24 / 36 mo</p>'+
-    '<div class="divide">'+
-      sliderH('chain','Chain',50,100,5,S.chain,'$',S.chainInt+' mo',false,'','chainInt','chain')+
-      sliderH('cassette','Cassette',75,500,5,S.cassette,'$',S.cassetteInt+' mo',false,'','cassetteInt','cassette')+
-      sliderH('chainring','Chainring',20,100,5,S.chainring,'$',S.chainringInt+' mo',false,'','chainringInt','chainring')+
-      '<div class="toggle-row">'+
-        '<div class="toggle-text">'+
-          '<div class="toggle-label-row">'+
-            '<span class="item-label">Battery wear &amp; tear</span>'+
-            '<span class="badge">E-bike</span>'+
-          '</div>'+
-          '<p class="toggle-desc">Turn on if you ride an e-MTB or have batteries on your rig. Adds a <span class="toggle-amt">$25/yr</span> reserve toward eventual battery replacement &#8212; capacity fades with charge cycles.</p>'+
-          '<p class="bat-egg" id="bat-egg">Remember, it&#39;s a battery-powered derailleur, not an electric drivetrain.</p>'+
-        '</div>'+
-        '<button class="switch" id="btn-bat" aria-pressed="false"><span class="knob"></span></button>'+
+function itemHTML(it){
+  if(it.kind==='svc'){
+    var inline='', chips='';
+    if(it.intKey) chips='<button class="badge badge-btn" id="ib-'+it.intKey+'" data-ikey="'+it.intKey+'">'+S[it.intKey]+' mo &#10227;</button>';
+    else inline=plainBadge(it.badge,it.assumed);
+    if(it.skip) chips+=skipChip(it.skip);
+    return sliderHTML({id:it.id,label:it.label,unit:'$',inline:inline,chips:chips});
+  }
+  if(it.kind==='unit'){
+    return sliderHTML({id:it.cost.id,label:it.cost.label,unit:'$',inline:plainBadge(it.cost.badge),chips:it.skip?skipChip(it.skip):''})+
+           sliderHTML({id:it.qty.id,label:it.qty.label,unit:it.qty.unit,inline:plainBadge(it.qty.badge)});
+  }
+  if(it.kind==='toggle'){
+    return '<div class="toggle-row"><div class="toggle-text">'+
+        '<div class="toggle-label-row"><span class="item-label">'+esc(it.label)+'</span>'+plainBadge(it.badge)+'</div>'+
+        '<p class="toggle-desc">'+it.desc+'</p>'+
+        '<p class="bat-egg" id="egg-'+it.id+'">'+esc(it.egg)+'</p>'+
       '</div>'+
+      '<button class="switch" id="btn-'+it.id+'" data-toggle="'+it.id+'" aria-pressed="false" aria-label="'+esc(it.label)+'"><span class="knob"></span></button>'+
     '</div>';
-
-  el('sec-on').innerHTML=
-    '<div class="section-head"><h2 class="section-title">Ongoing Consumables</h2><span class="section-total" id="t-on"></span></div>'+
-    '<div class="divide">'+
-      sliderH('chainLube','Chain lube or wax',30,100,5,S.chainLube,'$','Annual',false,'','','chainLube')+
-      sliderH('sealant','Tubeless sealant',25,100,5,S.sealant,'$','Annual',true,'','','sealant')+
-      sliderH('tireCost','Tire &#8212; price each',50,110,5,S.tireCost,'$','Per tire',false,'','','tires')+
-      sliderH('tireQty','Tires per year',1,7,1,S.tireQty,' tires','Qty',false,'')+
-      sliderH('padCost','Brake pads &#8212; price per set',15,50,5,S.padCost,'$','Per set',false,'','','pads')+
-      sliderH('padQty','Pad sets per year',1,12,1,S.padQty,' sets','Qty',false,'')+
-      sliderH('rotorCost','Brake rotor &#8212; price each',20,100,5,S.rotorCost,'$','Per rotor',false,'','','rotors')+
-      sliderH('rotorQty','Rotors per year',0,4,1,S.rotorQty,' rotors','Qty',false,'')+
-    '</div>';
-
-  el('sec-anc').innerHTML=
-    '<div class="section-head"><h2 class="section-title">Ancillary</h2><span class="section-total" id="t-anc"></span></div>'+
-    '<p class="section-sub">Tire plugs, quick links, UDH, etc.</p>'+
-    '<div class="divide">'+
-      sliderH('ancillary','Incidentals budget',10,500,5,S.ancillary,'$','Annual',true,'','','ancillary')+
-    '</div>';
-
-  el('ws-xc').innerHTML=
-    sliderH('xcRpw','Rides per week',1,7,1,S.xcRpw,' /wk','',false,S.xcRpw+' rides/wk')+
-    '<div style="border-top:1px solid #F4F4F5"></div>'+
-    sliderH('xcMpr','Miles per ride',1,50,1,S.xcMpr,' mi','',false,S.xcMpr+' mi/ride');
-
-  el('ws-end').innerHTML=
-    sliderH('endRpw','Rides per week',0,7,1,S.endRpw,' /wk','',false,S.endRpw+' rides/wk')+
-    '<div style="border-top:1px solid #F4F4F5"></div>'+
-    sliderH('endMpr','Miles per ride',1,50,1,S.endMpr,' mi','',false,S.endMpr+' mi/ride');
-
-  el('ws-park').innerHTML=
-    sliderH('parkDays','Bike park days this season',0,50,1,S.parkDays,' days','',false,'counts ~'+PARK_DAY_TRAIL_RIDES+'x trail wear');
+  }
+  return '';
 }
+
+// ── Build the page from the registries ─────────────────────────────────────
+function build(){
+  // Section cards
+  el('sections').innerHTML=SECTIONS.map(function(sec){
+    return '<div class="card" id="sec-'+sec.id+'">'+
+      '<div class="section-head"><h2 class="section-title">'+esc(sec.title)+'</h2><span class="section-total" id="t-'+sec.id+'"></span></div>'+
+      (sec.sub?'<p class="section-sub">'+esc(sec.sub)+'</p>':'')+
+      '<div class="divide">'+ITEMS.filter(function(it){ return it.sec===sec.id; }).map(itemHTML).join('')+'</div>'+
+    '</div>';
+  }).join('');
+
+  // Breakdown bar + legends. Colour comes from the registry via the --cat custom property; texture class = print only.
+  el('bar-wrap').innerHTML=SECTIONS.map(function(s){
+    return '<div class="bar-seg cat tex-'+s.texture+'" id="bar-'+s.id+'" style="--cat:'+s.color+'"></div>';
+  }).join('');
+  el('legend-grid').innerHTML=SECTIONS.map(function(s){
+    return '<div class="legend-item"><span class="legend-dot cat tex-'+s.texture+'" style="--cat:'+s.color+'"></span><span class="legend-name">'+esc(s.legend)+'</span><span class="legend-amt" id="leg-'+s.id+'">$0</span></div>';
+  }).join('');
+  el('proj-legend').innerHTML=SECTIONS.map(function(s){
+    return '<div class="legend-item"><span class="legend-dot cat tex-'+s.texture+'" style="--cat:'+s.color+'"></span><span class="legend-name">'+esc(s.legend)+'</span></div>';
+  }).join('');
+
+  // Worksheet inputs + result cells
+  var wsHTML=WS_GROUPS.map(function(g,gi){
+    var rows=WS_INPUTS.filter(function(w){ return w.group===g.id; }).map(function(w,i){
+      return (i?'<div class="ws-rule"></div>':'')+sliderHTML({id:w.id,label:w.label,unit:w.unit,sub:w.rocking&&S[w.id]===1?ROCKER_SVG:''});
+    }).join('');
+    return '<p class="ws-group">'+esc(g.title)+'</p><div id="ws-'+g.id+'">'+rows+'</div>'+(gi<WS_GROUPS.length-1?'<div class="ws-divider"></div>':'');
+  }).join('');
+  el('ws-body').insertAdjacentHTML('afterbegin',wsHTML);
+  el('ws-grid').innerHTML=WS_RESULTS.map(function(r){
+    return '<div class="ws-cell"><span class="ws-num" id="ws-'+r.id+'">-</span><span class="ws-cap">'+esc(r.cap)+'</span></div>';
+  }).join('');
+
+  // Advanced: months since last replaced (one slider per non-smooth svc item)
+  el('adv-body').innerHTML=AGED_ITEMS.map(function(it){
+    return sliderHTML({id:'age_'+it.id,label:it.label,unit:' mo'});
+  }).join('');
+
+  // Inflation dropdown
+  el('inflation').innerHTML=INFLATION_CHOICES.map(function(p){ return '<option value="'+p+'">'+p+'% / yr</option>'; }).join('');
+}
+
 
 // ── Update display ─────────────────────────────────────────────────────────
 function update(){
-  var a={
-    frontSusp: S.frontSusp,
-    rearSusp:  S.rearSusp,
-    dropper:   S.dropper,
-    pivots:    S.pivotBearings/(S.pivotInt/12),
-    chain:     S.chain/(S.chainInt/12),
-    cassette:  S.cassette/(S.cassetteInt/12),
-    chainring: S.chainring/(S.chainringInt/12),
-    battery:   S.batteryOn?25:0,
-    chainLube: S.chainLube,
-    sealant:   S.sealant,
-    tires:     S.tireCost*S.tireQty,
-    pads:      S.padCost*S.padQty,
-    rotors:    S.rotorCost*S.rotorQty,
-    ancillary: S.ancillary
-  };
-  // Zero out skipped items
-  if(SKIP.frontSusp) a.frontSusp=0;
-  if(SKIP.rearSusp) a.rearSusp=0;
-  if(SKIP.dropper) a.dropper=0;
-  if(SKIP.pivotBearings) a.pivots=0;
-  if(SKIP.chain) a.chain=0;
-  if(SKIP.cassette) a.cassette=0;
-  if(SKIP.chainring) a.chainring=0;
-  if(SKIP.chainLube) a.chainLube=0;
-  if(SKIP.sealant) a.sealant=0;
-  if(SKIP.tires) a.tires=0;
-  if(SKIP.rotors) a.rotors=0;
-  if(SKIP.ancillary) a.ancillary=0;
-  var susp = a.frontSusp+a.rearSusp+a.dropper+a.pivots;
-  var dt   = a.chain+a.cassette+a.chainring+a.battery;
-  var on   = a.chainLube+a.sealant+a.tires+a.pads+a.rotors;
-  var anc  = a.ancillary;
-  var grand = susp+dt+on+anc;
+  var lines=lineItems(), totals=sectionTotals(lines), grand=0, annualOf={};
+  lines.forEach(function(l){ annualOf[l.id]=l.annual; grand+=l.annual; });
 
-  // Gauge + totals
   updateGauge(grand);
-  setHTML('grand-total','$'+Math.round(grand)+'<small>/yr</small>');
-  setText('grand-mo','approx. $'+Math.round(grand/12)+'/mo');
-  setText('t-susp','$'+Math.round(susp)+'/yr');
-  setText('t-dt','$'+Math.round(dt)+'/yr');
-  setText('t-on','$'+Math.round(on)+'/yr');
-  setText('t-anc','$'+Math.round(anc)+'/yr');
-
-  // Breakdown bar + legend
-  [['susp',susp],['dt',dt],['on',on],['anc',anc]].forEach(function(p){
-    var seg=el('bar-'+p[0]); if(seg) seg.style.width=(grand>0?p[1]/grand*100:0)+'%';
-    setText('leg-'+p[0],'$'+Math.round(p[1]));
+  SECTIONS.forEach(function(s){
+    setText('t-'+s.id,money(totals[s.id])+'/yr');
+    var seg=el('bar-'+s.id); if(seg) seg.style.width=(grand>0?totals[s.id]/grand*100:0)+'%';
+    setText('leg-'+s.id,money(totals[s.id]));
   });
 
-  // Slider value displays
-  function v$(id,val){ setText('v-'+id,'$'+val); }
-  function vu(id,val,u){ setText('v-'+id,val+u); }
-  function sub(id,txt){ setText('s-'+id,txt); }
-
-  v$('frontSusp',S.frontSusp); sub('frontSusp','$'+Math.round(a.frontSusp)+'/yr equiv.');
-  v$('rearSusp',S.rearSusp);   sub('rearSusp','$'+Math.round(a.rearSusp)+'/yr equiv.');
-  v$('dropper',S.dropper);     sub('dropper','$'+Math.round(a.dropper)+'/yr equiv.');
-  v$('pivotBearings',S.pivotBearings); sub('pivotBearings','$'+Math.round(a.pivots)+'/yr equiv.');
-  v$('chain',S.chain);         sub('chain','$'+Math.round(a.chain)+'/yr equiv.');
-  v$('cassette',S.cassette);   sub('cassette','$'+Math.round(a.cassette)+'/yr equiv.');
-  v$('chainring',S.chainring); sub('chainring','$'+Math.round(a.chainring)+'/yr equiv.');
-  v$('chainLube',S.chainLube); sub('chainLube','$'+Math.round(a.chainLube)+'/yr equiv.');
-  v$('sealant',S.sealant);     sub('sealant','$'+Math.round(a.sealant)+'/yr equiv.');
-  v$('tireCost',S.tireCost);   sub('tireCost','$'+Math.round(a.tires)+'/yr total');
-  v$('padCost',S.padCost);     sub('padCost','$'+Math.round(a.pads)+'/yr total');
-  v$('rotorCost',S.rotorCost); sub('rotorCost','$'+Math.round(a.rotors)+'/yr total');
-  v$('ancillary',S.ancillary); sub('ancillary','$'+Math.round(a.ancillary)+'/yr equiv.');
-  vu('tireQty',S.tireQty,' tires');   sub('tireQty',S.tireQty+' x $'+S.tireCost);
-  vu('padQty',S.padQty,' sets');      sub('padQty',S.padQty+' x $'+S.padCost);
-  vu('rotorQty',S.rotorQty,' rotors');sub('rotorQty',S.rotorQty+' x $'+S.rotorCost);
-
-  // Worksheet displays
-  vu('xcRpw',S.xcRpw,' /wk');  sub('xcRpw',S.xcRpw+' rides/wk');
-  vu('xcMpr',S.xcMpr,' mi');   sub('xcMpr',S.xcMpr+' mi/ride');
-  vu('endRpw',S.endRpw,' /wk');sub('endRpw',S.endRpw+' rides/wk');
-  vu('endMpr',S.endMpr,' mi'); sub('endMpr',S.endMpr+' mi/ride');
-  vu('parkDays',S.parkDays,' days');
+  // Per-slider value + helper line
+  ITEMS.forEach(function(it){
+    if(it.kind==='svc'){
+      setText('v-'+it.id,'$'+S[it.id]);
+      setText('s-'+it.id,money(annualOf[it.id])+'/yr equiv.');
+      if(!it.smooth){
+        var age=S['age_'+it.id], m=monthsOf(it);
+        setText('v-age_'+it.id,age+' mo');
+        setText('s-age_'+it.id,age>=m?'due now':'next in '+(m-age)+' mo');
+      }
+    } else if(it.kind==='unit'){
+      setText('v-'+it.cost.id,'$'+S[it.cost.id]);  setText('s-'+it.cost.id,money(annualOf[it.id])+'/yr total');
+      setText('v-'+it.qty.id,S[it.qty.id]+it.qty.unit); setText('s-'+it.qty.id,S[it.qty.id]+' x $'+S[it.cost.id]);
+    }
+  });
+  WS_INPUTS.forEach(function(w){
+    setText('v-'+w.id,S[w.id]+w.unit);
+    if(w.rocking && S[w.id]===1) setHTML('s-'+w.id,ROCKER_SVG+'<span class="sr-only">1 ride per week</span>');   // easter egg: a rocking chair instead of "1 rides/wk"
+    else setText('s-'+w.id,w.sub.replace('{v}',S[w.id]));
+  });
 
   // Worksheet suggestions
-  var sg=suggestions();
+  var sg=suggestions(); lastSuggestions=sg;
   setText('ws-miles',sg.mi.toLocaleString()+' mi-equiv/yr');
-  setText('ws-tires',sg.tires); setText('ws-pads',sg.pads);
-  setText('ws-rotors',sg.rotors); setText('ws-chains',sg.chains.toFixed(1));   // chains/yr to one decimal; the others are whole parts
-  setText('ws-sealant',sg.sealant);
-  lastSuggestions=sg;
+  WS_RESULTS.forEach(function(r){ setText('ws-'+r.id,r.decimals?sg[r.id].toFixed(r.decimals):sg[r.id]); });
+
+  renderProjection();
 }
 
-// ── Events ─────────────────────────────────────────────────────────────────
-document.addEventListener('input', function(e){
-  if(!e.target.dataset.key) return;
-  S[e.target.dataset.key]=Number(e.target.value);
-  update();
-});
+
+// ── 5-year outlook chart ───────────────────────────────────────────────────
+/* Geometry, in the chart SVG's own units (viewBox 0 0 340 196). Bars follow the data-viz mark spec:
+   <= 24 thick, 4px rounded top, square on the baseline, 2px surface gap between stacked segments. */
+var VB_W=340, PLOT_L=44, PLOT_R=334, PLOT_T=18, PLOT_B=170;
+var BAR_W=24, BAR_GAP=2, BAR_RADIUS=4, Y_TICKS=4;
+
+function niceStep(max){   // a round step (1/2/2.5/5 x 10^n) that puts about Y_TICKS gridlines under `max`
+  var raw=max/Y_TICKS, mag=Math.pow(10,Math.floor(Math.log10(raw))), f=raw/mag;
+  var m=f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10;
+  return m*mag;
+}
+function roundedTop(x,y,w,h,r){   // rect with only the top two corners rounded (the bar's data end)
+  r=Math.min(r,w/2,h);
+  return 'M'+x+','+(y+h)+'L'+x+','+(y+r)+'Q'+x+','+y+' '+(x+r)+','+y+'L'+(x+w-r)+','+y+'Q'+(x+w)+','+y+' '+(x+w)+','+(y+r)+'L'+(x+w)+','+(y+h)+'Z';
+}
+
+function chartDefs(){   // print-only texture overlays (opacity 0 on screen; see .tx in the CSS)
+  return '<defs>'+
+    '<pattern id="tx-hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="#000" stroke-width="1.5" opacity=".7"/></pattern>'+
+    '<pattern id="tx-dots" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#27272A"/></pattern>'+
+  '</defs>';
+}
+
+function renderProjection(){
+  var proj=projection(), rows=S.cashView?proj.cash:proj.ann;
+  var other=S.cashView?proj.ann:proj.cash;
+  var maxTotal=Math.max.apply(null,rows.map(function(r){ return r.total; }));
+  var step=maxTotal>0?niceStep(maxTotal):100, top=Math.max(step,Math.ceil(maxTotal/step)*step);
+  var ph=PLOT_B-PLOT_T, slot=(PLOT_R-PLOT_L)/PROJECTION_YEARS;
+  function yOf(v){ return PLOT_B-v/top*ph; }
+
+  var svg=chartDefs();
+  // Gridlines + y labels (hairlines, solid, recessive)
+  for(var v=0;v<=top+step/1000;v+=step){
+    var gy=yOf(v).toFixed(1);
+    svg+='<line class="'+(v===0?'base':'grid')+'" x1="'+PLOT_L+'" x2="'+PLOT_R+'" y1="'+gy+'" y2="'+gy+'"/>'+
+         '<text class="ax" x="'+(PLOT_L-6)+'" y="'+(+gy+3)+'" text-anchor="end">'+moneyShort(v)+'</text>';
+  }
+  rows.forEach(function(r,i){
+    var cx=PLOT_L+i*slot+slot/2, x=cx-BAR_W/2, cursor=PLOT_B, lastIdx=-1;
+    SECTIONS.forEach(function(s,si){ if(r[s.id]>0.5) lastIdx=si; });
+    var segs='';
+    SECTIONS.forEach(function(s,si){
+      var h=r[s.id]/top*ph; if(h<=0.01) return;
+      var segTop=cursor-h, drawH=h-(cursor<PLOT_B?BAR_GAP:0);   // the gap sits under every segment except the first
+      if(drawH>0.5){
+        var isTop=si===lastIdx, y0=segTop, hh=drawH;
+        var geom=isTop?'<path class="seg tex-'+s.texture+'" style="--cat:'+s.color+'" d="'+roundedTop(x,y0,BAR_W,hh,BAR_RADIUS)+'"/>'
+                      :'<rect class="seg tex-'+s.texture+'" style="--cat:'+s.color+'" x="'+x+'" y="'+y0.toFixed(1)+'" width="'+BAR_W+'" height="'+hh.toFixed(1)+'"/>';
+        segs+=geom;
+        if(s.texture==='hatch'||s.texture==='dots'){
+          segs+=isTop?'<path class="tx" fill="url(#tx-'+s.texture+')" d="'+roundedTop(x,y0,BAR_W,hh,BAR_RADIUS)+'"/>'
+                     :'<rect class="tx" fill="url(#tx-'+s.texture+')" x="'+x+'" y="'+y0.toFixed(1)+'" width="'+BAR_W+'" height="'+hh.toFixed(1)+'"/>';
+        }
+      }
+      cursor=segTop;
+    });
+    svg+='<g class="slot" tabindex="0" data-i="'+i+'" aria-label="Year '+(i+1)+': '+money(r.total)+'">'+
+         '<rect class="hit" x="'+(PLOT_L+i*slot).toFixed(1)+'" y="'+(PLOT_T-14)+'" width="'+slot.toFixed(1)+'" height="'+(ph+14+22)+'"/>'+segs+
+         (r.total>0?'<text class="bar-val" x="'+cx.toFixed(1)+'" y="'+(cursor-5).toFixed(1)+'" text-anchor="middle">'+money(r.total)+'</text>':'')+
+         '<text class="ax" x="'+cx.toFixed(1)+'" y="'+(PLOT_B+14)+'" text-anchor="middle">Yr '+(i+1)+'</text></g>';
+  });
+  el('proj-svg').innerHTML=svg;
+  el('proj-svg')._rows=rows;   // the tooltip reads these
+
+  // Header, assumptions line, callout, table
+  var sumOf=function(rs){ return rs.reduce(function(a,r){ return a+r.total; },0); };
+  var total=sumOf(rows), otherTotal=sumOf(other);
+  setText('proj-total',money(total)+' / '+PROJECTION_YEARS+' yr');
+  var aged=AGED_ITEMS.some(function(it){ return !isSkipped(it) && S['age_'+it.id]>0; });
+  setText('proj-assume',(S.cashView?'Cash timing':'Annualized')+' · '+S.inflation+'%/yr price inflation · '+(aged?"uses your 'months since last replaced' inputs":'every part assumed new today'));
+  var peakI=0; rows.forEach(function(r,i){ if(r.total>rows[peakI].total) peakI=i; });
+  var avgMo=total/(PROJECTION_YEARS*12);
+  var cashTotal=sumOf(proj.cash), annTotal=sumOf(proj.ann);
+  var callout=S.cashView
+    ? 'Peak: <strong>Year '+(peakI+1)+'</strong> at <strong>'+money(rows[peakI].total)+'</strong>. Setting aside <strong>'+money(avgMo)+'/mo</strong> (the '+PROJECTION_YEARS+'-year average) covers the lumpy years. '
+    : 'Run-rate view: every year carries each part\'s yearly share, so replacement timing is smoothed out. Average <strong>'+money(avgMo)+'/mo</strong>. ';
+  callout+=Math.abs(cashTotal-annTotal)>=1
+    ? PROJECTION_YEARS+'-year total: <strong>'+money(cashTotal)+'</strong> cash timing vs <strong>'+money(annTotal)+'</strong> annualized.'
+    : '';
+  setHTML('proj-callout',callout);
+
+  var cum=0, thead='<thead><tr><th scope="col">Year</th>'+SECTIONS.map(function(s){ return '<th scope="col">'+esc(s.legend)+'</th>'; }).join('')+'<th scope="col">Total</th><th scope="col">Cumulative</th></tr></thead>';
+  var tbody='<tbody>'+rows.map(function(r,i){
+    cum+=r.total;
+    return '<tr><th scope="row">'+(i+1)+'</th>'+SECTIONS.map(function(s){ return '<td>'+money(r[s.id])+'</td>'; }).join('')+'<td>'+money(r.total)+'</td><td>'+money(cum)+'</td></tr>';
+  }).join('')+'</tbody>';
+  el('proj-table').innerHTML='<caption class="sr-only">Projected spend by year, '+(S.cashView?'cash timing':'annualized')+'</caption>'+thead+tbody;
+  var proj_svg=el('proj-svg');
+  proj_svg.setAttribute('aria-label','Projected maintenance spend by year, '+(S.cashView?'cash timing':'annualized')+', '+money(total)+' over '+PROJECTION_YEARS+' years. Peak year '+(peakI+1)+' at '+money(rows[peakI].total)+'. A table view follows.');
+}
+
+// Tooltip (hover, tap or keyboard focus on a year). Text goes in with textContent, never innerHTML.
+function mk(tag,cls,text){ var e=document.createElement(tag); if(cls) e.className=cls; if(text!==undefined) e.textContent=text; return e; }
+function showTip(i){
+  var svgEl=el('proj-svg'), rows=svgEl._rows, tip=el('proj-tip'); if(!rows||!rows[i]) return;
+  var r=rows[i];
+  tip.textContent='';
+  tip.appendChild(mk('div','tip-year','Year '+(i+1)));
+  SECTIONS.forEach(function(s){
+    var row=mk('div','tip-row'), key=mk('span','tip-key'); key.style.background=s.color;
+    row.appendChild(key); row.appendChild(mk('span','',s.legend)); row.appendChild(mk('span','tip-val',money(r[s.id])));
+    tip.appendChild(row);
+  });
+  var tot=mk('div','tip-row tip-total'); tot.appendChild(mk('span','','Total')); tot.appendChild(mk('span','tip-val',money(r.total))); tip.appendChild(tot);
+  tip.hidden=false;
+  var rect=svgEl.getBoundingClientRect(), k=rect.width/VB_W, slot=(PLOT_R-PLOT_L)/PROJECTION_YEARS;
+  var cx=(PLOT_L+i*slot+slot/2)*k, w=tip.offsetWidth;
+  tip.style.left=Math.max(0,Math.min(cx-w/2,rect.width-w))+'px';
+  tip.style.top=((PLOT_B+22)*k)+'px';   // below the axis labels: the column being read stays fully visible
+}
+function hideTip(){ el('proj-tip').hidden=true; }
+function slotOf(e){ var s=e.target.closest&&e.target.closest('.slot'); return s?Number(s.dataset.i):-1; }
+
+
+// ── Controls <-> state ─────────────────────────────────────────────────────
+/* syncControls() pushes S into every control (sliders, interval badges, switch, dropdown, view toggle, skip chips).
+   Reset, Apply and first load all go through it so a control can never show a stale value. */
+function syncControls(){
+  document.querySelectorAll('input[data-key]').forEach(function(r){ if(S[r.dataset.key]!==undefined) r.value=S[r.dataset.key]; });
+  INTERVAL_KEYS.forEach(function(k){ var b=el('ib-'+k); if(b) b.innerHTML=S[k]+' mo &#10227;'; });
+  ITEMS.forEach(function(it){
+    if(it.kind!=='toggle') return;
+    var sw=el('btn-'+it.id); if(!sw) return;
+    sw.classList.toggle('on',!!S[it.stateKey]); sw.setAttribute('aria-pressed',!!S[it.stateKey]);
+    el('egg-'+it.id).classList.toggle('show',!!S[it.stateKey]);   // the joke shows only while the switch is ON
+  });
+  el('inflation').value=S.inflation;
+  document.querySelectorAll('.seg-btn').forEach(function(b){ b.setAttribute('aria-pressed',Number(b.dataset.view)===S.cashView); });
+  SKIP_KEYS.forEach(syncSkip);
+}
 
 function syncSkip(key){
   var on=!!SKIP[key];
@@ -711,6 +1117,13 @@ function syncSkip(key){
   });
 }
 
+document.addEventListener('input', function(e){
+  var k=e.target.dataset && e.target.dataset.key; if(!k) return;
+  S[k]=Number(e.target.value);
+  update();
+});
+
+// Game Over overlay (the "skip brake pads" joke)
 var lastPadBtn=null;
 function gameOver(btn){
   lastPadBtn=btn;
@@ -736,134 +1149,137 @@ document.addEventListener('keydown', function(e){
   else if(e.key==='Tab'){ e.preventDefault(); }
 });
 
+function applyWorksheet(){
+  // All five worksheet results land on a dial. Each is clamped to its slider's range (see LIMITS).
+  var sg=lastSuggestions||suggestions();
+  WS_RESULTS.forEach(function(r){
+    if(r.intKey) S[r.intKey]=nearestInterval(12/sg[r.id]);                  // chains/yr -> replacement interval in months
+    else S[r.key]=clampKey(r.key,sg[r.id]*(r.perUnit||1));                   // refills -> dollars, etc.
+    if(r.skip && SKIP[r.skip]) SKIP[r.skip]=false;                           // a skipped item would zero the freshly applied number
+  });
+  syncControls(); update();
+  var ws=document.querySelector('details.ws'); if(ws) ws.open=false;
+  var reduceMotion=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'});
+}
+
 document.addEventListener('click', function(e){
-  var t=e.target;
+  var t=e.target, c=t.closest?t.closest.bind(t):function(){ return null; };
 
-  // Game over overlay — tap anywhere to dismiss
-  if(t.id==='go-overlay' || (t.closest && t.closest('#go-overlay'))){
-    dismissGameOver(); return;
-  }
+  // Game over overlay: tap anywhere to dismiss
+  if(c('#go-overlay')){ dismissGameOver(); return; }
 
-  // Skip buttons
-  var sk=t.dataset && t.dataset.skip;
-  if(sk){
-    if(sk==='pads'){ gameOver(t); return; }
-    SKIP[sk]=!SKIP[sk];
-    syncSkip(sk);
-    update(); return;
+  // Skip chips
+  var skipBtn=c('[data-skip]');
+  if(skipBtn){
+    var sk=skipBtn.dataset.skip;
+    if(!SKIPMAP[sk]){ gameOver(skipBtn); return; }   // a group with no entry in SKIPMAP (brake pads) cannot be skipped
+    SKIP[sk]=!SKIP[sk]; syncSkip(sk); update(); return;
   }
 
   // Interval badges
-  var ikey=t.dataset && t.dataset.ikey;
-  if(ikey){
-    var idx=INT.indexOf(S[ikey]);
-    S[ikey]=INT[(idx+1)%INT.length];
-    t.innerHTML=S[ikey]+' mo &#10227;';
+  var ib=c('[data-ikey]');
+  if(ib){
+    var ikey=ib.dataset.ikey;
+    S[ikey]=INT[(INT.indexOf(S[ikey])+1)%INT.length];
+    ib.innerHTML=S[ikey]+' mo &#10227;';
     update(); return;
   }
 
-  // Battery toggle (click on button or knob inside it)
-  var bat=t.id==='btn-bat'?t:t.closest('#btn-bat');
-  if(bat){
-    S.batteryOn=!S.batteryOn;
-    bat.classList.toggle('on',S.batteryOn);
-    bat.setAttribute('aria-pressed',S.batteryOn);
-    var egg=el('bat-egg'); if(egg) egg.classList.toggle('show',S.batteryOn);   // only while the battery is ON
-    update(); return;
+  // On/off switch (click on the button or the knob inside it)
+  var sw=c('[data-toggle]');
+  if(sw){
+    var it=ITEMS.filter(function(x){ return x.id===sw.dataset.toggle; })[0];
+    S[it.stateKey]=!S[it.stateKey];
+    syncControls(); update(); return;
   }
 
-  // Apply worksheet
-  if(t.id==='btn-apply'){
-    // All five worksheet results land on a dial. Each is clamped to its slider's range (see LIMITS).
-    var sg=lastSuggestions||suggestions();
-    S.tireQty=clampKey('tireQty',sg.tires);
-    S.padQty=clampKey('padQty',sg.pads);
-    S.rotorQty=clampKey('rotorQty',sg.rotors);
-    S.sealant=clampKey('sealant',sg.sealant*SEALANT_REFILL_COST);   // refills -> dollars
-    S.chainInt=nearestInterval(12/sg.chains);                        // chains/yr -> replacement interval in months
-    // A skipped item would zero out the freshly applied number, so un-skip everything we just set.
-    ['tires','rotors','chain','sealant'].forEach(function(k){
-      if(SKIP[k]){ SKIP[k]=false; syncSkip(k); }
-    });
-    ['tireQty','padQty','rotorQty','sealant'].forEach(function(k){
-      var r=el('r-'+k); if(r) r.value=S[k];
-    });
-    var ib=el('ib-chainInt'); if(ib) ib.innerHTML=S.chainInt+' mo &#10227;';
-    update();
-    var ws=document.querySelector('details.ws'); if(ws) ws.open=false;
-    var reduceMotion=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'});
-    return;
+  // 5-year view toggle
+  var seg=c('.seg-btn');
+  if(seg){ S.cashView=Number(seg.dataset.view); syncControls(); update(); return; }
+
+  if(c('#btn-apply')){ applyWorksheet(); return; }
+
+  // Reset the worksheet only: its sliders go back to defaults; the cost dials are left alone
+  if(c('#btn-ws-reset')){
+    WS_INPUTS.forEach(function(w){ S[w.id]=D[w.id]; });
+    syncControls(); update(); return;
   }
 
-  // Reset
-  if(t.id==='btn-reset'){
+  // Reset everything
+  if(c('#btn-reset')){
     Object.assign(S,D);
-    document.querySelectorAll('input[data-key]').forEach(function(r){
-      if(S[r.dataset.key]!==undefined) r.value=S[r.dataset.key];
-    });
-    ['chainInt','cassetteInt','chainringInt','pivotInt'].forEach(function(k){
-      var b=el('ib-'+k); if(b) b.innerHTML=S[k]+' mo &#10227;';
-    });
-    var bat=el('btn-bat');
-    if(bat){ bat.classList.remove('on'); bat.setAttribute('aria-pressed',false); }
-    Object.keys(SKIP).forEach(function(k){ SKIP[k]=false; syncSkip(k); });
-    var egg=el('bat-egg'); if(egg) egg.classList.remove('show');
-    update();
+    Object.keys(SKIP).forEach(function(k){ SKIP[k]=false; });
+    syncControls(); update();
   }
 });
 
-// ── Init ───────────────────────────────────────────────────────────────────
-var STATE_KEYS=['frontSusp','rearSusp','dropper','pivotBearings','chain','cassette','chainring',
-  'chainInt','cassetteInt','chainringInt','chainLube','sealant','tireCost','tireQty',
-  'padCost','padQty','rotorCost','rotorQty','ancillary','xcRpw','xcMpr','endRpw','endMpr','parkDays',
-  'pivotInt'];   // ORDER IS THE SHARE-LINK FORMAT: only ever append new keys at the end, or every link already shared decodes wrong
-var SKIP_KEYS=Object.keys(SKIPMAP);
+// Chart tooltip wiring
+(function wireTip(){
+  var svgEl=el('proj-svg');
+  svgEl.addEventListener('pointerover',function(e){ var i=slotOf(e); if(i>=0) showTip(i); });
+  svgEl.addEventListener('pointermove',function(e){ var i=slotOf(e); if(i>=0) showTip(i); });
+  svgEl.addEventListener('pointerleave',hideTip);
+  svgEl.addEventListener('focusin',function(e){ var i=slotOf(e); if(i>=0) showTip(i); });
+  svgEl.addEventListener('focusout',hideTip);
+  document.addEventListener('pointerdown',function(e){ if(!(e.target.closest&&e.target.closest('.proj-plot'))) hideTip(); });   // tap elsewhere closes it on touch screens
+})();
 
-/* Share links live in the URL HASH (#s=...), not the query string. The PMR wrapper page forwards the
-   outer page's hash into this iframe but drops the query string, so a ?s= link opened on
-   postmillenniumrenaissance.com/maintenance/ silently loaded the defaults. Old ?s= links (github.io) still work. */
-var SHARE_BASE_URL='https://www.postmillenniumrenaissance.com/maintenance/';   // links always point at the PMR page, not the bare github.io frame
+
+// ── Share link ─────────────────────────────────────────────────────────────
+/* Format:  <legacy values, comma-separated> . <battery 0/1> . <skip bits> [ . <named key:value pairs> ]
+   The first three parts are the ORIGINAL format and never change. The optional 4th part carries every other
+   state key that differs from its default (inflation, view, months-since-replaced, any item added later), so
+   old links still decode and new settings never need a format change.
+   Links live in the URL HASH (#s=...), not the query string: the PMR wrapper page forwards the outer page's hash into
+   this iframe but drops the query string. Old ?s= links (github.io) still load. */
 function readSharedState(){
   var m=/[#&]s=([^&]*)/.exec(window.location.hash);
   if(m){ try{ return decodeURIComponent(m[1]); }catch(err){ return null; } }
   return new URLSearchParams(window.location.search).get('s');
 }
+function namedKeys(){ return Object.keys(D).filter(function(k){ return LEGACY_STATE_KEYS.indexOf(k)<0 && k!=='batteryOn'; }); }
 
 function loadFromURL(){
   var v=readSharedState();
   if(!v) return;
   var parts=v.split('.');
   var vals=(parts[0]||'').split(',');
-  STATE_KEYS.forEach(function(k,i){
+  LEGACY_STATE_KEYS.forEach(function(k,i){
     if(vals[i]===undefined || vals[i]==='') return;
     var n=Number(vals[i]);
-    if(!isFinite(n)) return;                           // junk like "abc" -> keep the default instead of $NaN
-    if(/Int$/.test(k)){ if(INT.indexOf(n)>=0) S[k]=n; }   // interval badges accept only 12 / 24 / 36
-    else S[k]=clampKey(k,n);                           // dials are clamped + snapped to their slider
+    if(!isFinite(n)) return;                                  // junk like "abc" -> keep the default instead of $NaN
+    if(INTERVAL_KEYS.indexOf(k)>=0){ if(INT.indexOf(n)>=0) S[k]=n; }   // interval badges accept only 12 / 24 / 36
+    else S[k]=clampKey(k,n);                                  // dials are clamped + snapped to their slider
   });
   if(parts[1]==='1') S.batteryOn=true;
   var skipBits=parts[2]||'';
   SKIP_KEYS.forEach(function(k,i){ if(skipBits[i]==='1') SKIP[k]=true; });
+  if(parts[3]){
+    var named=namedKeys();
+    parts[3].split(',').forEach(function(pair){
+      var kv=pair.split(':'), n=Number(kv[1]);
+      if(named.indexOf(kv[0])>=0 && isFinite(n)) S[kv[0]]=clampKey(kv[0],n);
+    });
+  }
 }
 
 function buildShareURL(){
-  var vals=STATE_KEYS.map(function(k){ return S[k]; }).join(',');
+  var vals=LEGACY_STATE_KEYS.map(function(k){ return S[k]; }).join(',');
   var bat=S.batteryOn?'1':'0';
   var skipBits=SKIP_KEYS.map(function(k){ return SKIP[k]?'1':'0'; }).join('');
-  var s=vals+'.'+bat+'.'+skipBits;
-  return SHARE_BASE_URL+'#s='+s;
+  var named=namedKeys().filter(function(k){ return S[k]!==D[k]; }).map(function(k){ return k+':'+S[k]; }).join(',');
+  return SHARE_BASE_URL+'#s='+vals+'.'+bat+'.'+skipBits+(named?'.'+named:'');
 }
 
 document.addEventListener('click', function(e){
-  if(e.target.id!=='btn-share') return;
+  var btn=e.target.closest && e.target.closest('#btn-share');   // closest(): a click on the icon's <svg>/<path> must count too
+  if(!btn) return;
   var url=buildShareURL();
-  var btn=e.target;
   function flash(){
-    var orig=btn.textContent;
-    btn.textContent='Link copied!';
     btn.classList.add('copied');
-    setTimeout(function(){ btn.textContent=orig; btn.classList.remove('copied'); },1800);
+    setText('copy-tip','Link copied!');
+    setTimeout(function(){ btn.classList.remove('copied'); setText('copy-tip',''); },1800);
   }
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(url).then(flash).catch(function(){ prompt('Copy this link:',url); });
@@ -898,10 +1314,11 @@ document.addEventListener('click', function(e){
 });
 stampPrintDate();
 
+// ── Init ───────────────────────────────────────────────────────────────────
 loadFromURL();
 build();
-Object.keys(SKIPMAP).forEach(syncSkip);
-(function(){ var bat=el('btn-bat'); if(bat && S.batteryOn){ bat.classList.add('on'); bat.setAttribute('aria-pressed',true); } })();
+initGauge();
+syncControls();
 update();
 </script>
 </body>
