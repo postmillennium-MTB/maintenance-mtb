@@ -166,7 +166,6 @@ body{position:relative;min-height:100vh;background:var(--page-bg);font-family:'S
 .wrap{max-width:30rem;margin:0 auto;padding:2rem 1rem}
 .eyebrow{font-family:'JetBrains Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.15em;color:var(--page-accent);font-weight:600;margin-bottom:.2rem}
 h1{font-size:1.5rem;font-weight:700}
-.sub-head{font-size:.875rem;color:var(--page-muted);margin-top:.25rem;margin-bottom:1.5rem}
 .card{background:#fff;border:1px solid #E4E4E7;border-radius:1rem;padding:1.25rem;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:1rem}
 /* ── Gauge: dial + $ figures in one SVG. Capped at 16rem wide (it used to fill the card) because the figures now sit inside the arc. ── */
 .gauge-card{border-radius:1.5rem;padding:1rem 1.25rem .75rem}
@@ -242,17 +241,17 @@ details.ws[open] .chevron{transform:rotate(180deg)}
 .credit{font-size:.65rem;color:var(--page-muted);margin-top:.6rem;line-height:1.5}
 .credit:empty{display:none}   /* scheme 2 has no texture, so nothing to credit */
 .credit p+p{margin-top:.25rem}
-.badge-row{display:flex;align-items:center;gap:.5rem}
-.top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}
+.top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.25rem}
 .pmr-badge{flex-shrink:0;width:52px;height:52px;display:block}
 .pmr-badge:hover{opacity:.85}
 /* Top-right action cluster: the PMR badge with the share + print icon buttons under it.
    Icons are Lucide (inline SVG, stroke=currentColor, so they follow the text color). Each button is a 44px touch target and is named by aria-label, never by the icon. */
 .top-actions{display:flex;flex-direction:column;align-items:flex-end;gap:.5rem;flex-shrink:0;position:relative}
-.icon-row{display:flex;gap:.5rem}
-.icon-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:.75rem;border:1px solid #D4D4D8;background:#fff;color:#0E7490;cursor:pointer;padding:0}
+.icon-row{display:flex;gap:.375rem}
+.icon-btn{position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:.6rem;border:1px solid #D4D4D8;background:#fff;color:#0E7490;cursor:pointer;padding:0}
 .icon-btn:hover{background:#E0F2FE}
-.icon-btn svg{display:block;width:20px;height:20px}   /* display:block removes the inline-SVG baseline gap so the icon centers in the button */
+.icon-btn svg{display:block;width:18px;height:18px}
+.icon-btn::before{content:"";position:absolute;inset:-3px}   /* invisible hit area: 42px around the 36px visual, and it stops exactly where the neighbour's begins (6px gap) */   /* display:block removes the inline-SVG baseline gap so the icon centers in the button */
 .icon-btn .ic-done{display:none}
 .icon-btn.copied{border-color:#0E7490;background:#E0F2FE}
 .icon-btn.copied .ic-send{display:none}
@@ -371,7 +370,7 @@ details.proj-table th[scope="row"]{text-align:left;color:#71717A}
 body{background:#fff;color:var(--p-ink);min-height:0}
 
 /* ── Chrome that is meaningless on paper ── */
-.reset-btn,.icon-row,.badge-row .icon-btn,.texture,.texture-2,.credit,.copy-tip,.ws-apply,.ws-reset,.ws-apply-note,.proj-controls,details.adv,details.proj-table,.tip,.chevron,.bat-egg,#go-overlay,.skip-btn:not(.active){display:none!important}   /* .ws-apply-note explains a button that is hidden on paper; it also kept the footer off page 2 */
+.reset-btn,.icon-row,.texture,.texture-2,.credit,.copy-tip,.ws-apply,.ws-reset,.ws-apply-note,.proj-controls,details.adv,details.proj-table,.tip,.chevron,.bat-egg,#go-overlay,.skip-btn:not(.active){display:none!important}   /* .ws-apply-note explains a button that is hidden on paper; it also kept the footer off page 2 */
 .skip-btn.active{border:1px solid var(--p-ink2);background:#fff;color:var(--p-ink2);font-size:.75rem}
 .pmr-badge{width:44px;height:44px}
 /* Screen touch targets (40px chips, 40px-tall sliders) would bloat the page; paper doesn't need them. */
@@ -385,7 +384,7 @@ input[type=range]{height:5px}   /* original print height; the 40px screen hit ar
 .wrap{max-width:none;padding:0;display:grid;grid-template-columns:1fr 1fr;column-gap:.25in;align-items:start}
 .top-row,.proj-card,.sections,details.ws,.footnote,.print-foot{grid-column:1/-1}
 .sections{order:1}details.ws{order:2}.footnote{order:3}.print-foot{order:4}
-.sub-head{margin-bottom:.4rem}
+.top-row{margin-bottom:.4rem}
 .card,details.ws{border:1px solid var(--p-rule);border-radius:.5rem;padding:.6rem .9rem;margin-bottom:.45rem;break-inside:avoid;page-break-inside:avoid}
 .gauge-card{padding:.75rem 1rem;border-radius:.5rem}
 #gauge-svg{display:block;width:100%;max-width:11rem;margin:0 auto}   /* full-width gauge made this row the tallest thing on page 1 */
@@ -415,7 +414,7 @@ h1,h2,.section-title,.section-head{break-after:avoid;page-break-after:avoid}
 
 /* ── Contrast: type ── */
 .eyebrow,.section-total,.toggle-amt,.ws-num,.ws-group,.badge{color:var(--p-accent)}
-.sub-head,.legend-name,.section-sub,.ticks,.toggle-desc,.ws-miles,.ws-cap,.ws-note,.footnote,.skip-btn{color:var(--p-muted)}
+.legend-name,.section-sub,.ticks,.toggle-desc,.ws-miles,.ws-cap,.ws-note,.footnote,.skip-btn{color:var(--p-muted)}
 .section-title,.item-label,.legend-amt,.ws-result-title{color:var(--p-ink2)}
 .item-val{color:var(--p-ink)}
 .g-num{fill:var(--p-ink)}
@@ -495,13 +494,9 @@ details.ws summary{padding:0 0 .5rem;list-style:none}
     <div>
       <p class="eyebrow">Post Millennium Renaissance</p>
       <h1>MTB Annual Maintenance Cost</h1>
-      <p class="sub-head">Dial in each line item to estimate your yearly spend.</p>
     </div>
     <div class="top-actions">
-      <!-- Icon: Lucide "swatch-book" (ISC licence), inline so the file stays zero-dependency. Cycles the color scheme (THEMES registry). -->
-      <div class="badge-row">
-        <button type="button" class="icon-btn" id="btn-theme" aria-label="Switch color scheme" title="Switch color scheme"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-swatch-book" aria-hidden="true" focusable="false"><path d="M11 17a4 4 0 0 1-8 0V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2Z"/><path d="M16.7 13H19a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H7"/><path d="M 7 17h.01"/><path d="m11 8 2.3-2.3a2.4 2.4 0 0 1 3.404.004L18.6 7.6a2.4 2.4 0 0 1 .026 3.434L9.9 19.8"/></svg></button>
-        <a href="https://www.postmillenniumrenaissance.com" target="_blank" rel="noopener" class="pmr-badge" aria-label="Visit Post Millennium Renaissance">
+      <a href="https://www.postmillenniumrenaissance.com" target="_blank" rel="noopener" class="pmr-badge" aria-label="Visit Post Millennium Renaissance">
           <svg viewBox="0 0 100 100" width="100%" height="100%">
             <polygon points="50,2 58,12 69,6 73,18 86,15 86,28 98,32 93,44 100,55 89,61 91,74 78,75 74,88 62,84 55,95 46,86 35,94 30,81 17,82 15,69 3,64 10,53 2,42 14,37 12,24 25,24 28,11 40,15" fill="#B08D57"/>
             <ellipse cx="50" cy="50" rx="34" ry="24" fill="#FAFAFA"/>
@@ -509,9 +504,9 @@ details.ws summary{padding:0 0 .5rem;list-style:none}
             <text x="50" y="58" text-anchor="middle" font-family="'Space Grotesk',system-ui,sans-serif" font-weight="700" font-size="22" fill="#0E5A73">PMR</text>
           </svg>
         </a>
-      </div>
-      <!-- Icons: Lucide "send" (paper plane = share), "check" (copied confirmation) and "printer" (ISC licence), inline so the file stays zero-dependency. -->
+      <!-- Icons: Lucide "swatch-book" (color scheme), "send" (paper plane = share), "check" (copied confirmation) and "printer" (ISC licence), inline so the file stays zero-dependency. -->
       <div class="icon-row">
+        <button type="button" class="icon-btn" id="btn-theme" aria-label="Switch color scheme" title="Switch color scheme"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-swatch-book" aria-hidden="true" focusable="false"><path d="M11 17a4 4 0 0 1-8 0V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2Z"/><path d="M16.7 13H19a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H7"/><path d="M 7 17h.01"/><path d="m11 8 2.3-2.3a2.4 2.4 0 0 1 3.404.004L18.6 7.6a2.4 2.4 0 0 1 .026 3.434L9.9 19.8"/></svg></button>
         <button type="button" class="icon-btn" id="btn-share" aria-label="Copy share link" title="Copy share link"><svg class="lucide lucide-send ic-send" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg><svg class="lucide lucide-check ic-done" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg></button>
         <button type="button" class="icon-btn" id="btn-print" aria-label="Print or save as PDF" title="Print or save as PDF"><svg class="lucide lucide-printer" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg></button>
       </div>

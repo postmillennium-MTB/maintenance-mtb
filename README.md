@@ -107,7 +107,7 @@ These are ballpark figures, not measured data. They're calibrated to feel reason
 
 ## Color schemes
 
-The swatch-book icon button (top right, next to the PMR badge) cycles through three color schemes. The choice is saved in the browser (`localStorage`, preference only; the tool works without it).
+The swatch-book icon button (top right, in the row of three small icon buttons under the PMR badge: color scheme, share, print) cycles through three color schemes. The choice is saved in the browser (`localStorage`, preference only; the tool works without it).
 
 | # | Id | Look |
 |---|---|---|
