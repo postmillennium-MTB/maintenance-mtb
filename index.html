@@ -8,7 +8,7 @@
   FILE MAP  (search the ALL-CAPS section labels to jump; line numbers drift)
 
   <head> / <style> ............... top of file
-    · COLOR SCHEMES ............. 3 themes + the PMR texture layers (scheme-scoped)
+    · COLOR SCHEMES ............. the themes + the PMR texture layers (scheme-scoped)
     · BASE, GAUGE, BREAKDOWN ..... cards, the dial (numbers live inside it), the "Where it goes" bar
     · 5-YEAR OUTLOOK ............. chart marks, tooltip, controls, table
     · SLIDERS, SKIP, SWITCH ...... line-item rows
@@ -21,7 +21,7 @@
   <script>
     ==== ALL DATA LIVES IN ONE CONTIGUOUS BLOCK AT THE TOP ====
     · wear-model constants ...... every worksheet assumption, named and commented
-    · THEMES registry ........... the 3 color schemes (swatch button); CSS blocks are under COLOR SCHEMES in <style>
+    · THEMES registry ........... the color schemes (swatch button); CSS blocks are under COLOR SCHEMES in <style>
     · SECTIONS registry ......... the cost categories (name, colour, print texture)
     · ITEMS registry ............ every line item: one entry = slider, totals, chart, share link
     · WS_GROUPS / WS_INPUTS / WS_RESULTS ... Ride Worksheet
@@ -66,7 +66,7 @@ try{var t=localStorage.getItem('pmrMaintenanceTheme'); if(t) document.documentEl
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 /* ════════════════════════════════════════════════════════════════════════════
-   COLOR SCHEMES  —  three looks, chosen by <html data-theme="...">. The registry is THEMES in the script.
+   COLOR SCHEMES  —  the looks, chosen by <html data-theme="...">. The registry is THEMES in the script.
    TO ADD A SCHEME: one entry in THEMES + one block here (custom properties cannot be generated from JS).
    TRAP: ":root" and "[data-theme=...]" have IDENTICAL specificity (0,1,0), so whichever is declared LAST wins.
    The DEFAULT scheme's block therefore goes FIRST and carries the bare :root; the others follow it.
@@ -79,6 +79,7 @@ try{var t=localStorage.getItem('pmrMaintenanceTheme'); if(t) document.documentEl
    ════════════════════════════════════════════════════════════════════════════ */
 :root,[data-theme="day"]{--page-bg:#ECEAE4;--page-muted:#52525B;--page-accent:#0B5568;--tex-ink:#006d8f;--tex-opacity:0.1;--tex-2-opacity:0.1}   /* scheme 1 (default): the main site's Day paper */
 [data-theme="classic"]{--page-bg:#FAFAFA;--page-muted:#71717A;--page-accent:#0E7490}   /* scheme 2: the original look, no texture */
+[data-theme="crowe"]{--page-bg:#7B7D84;--page-ink:#0A0A0A;--page-muted:#0A0A0A;--page-accent:#0A0A0A;--tex-ink:#d58400;--tex-opacity:0.335}   /* scheme 4: mid slate-grey paper, ESTIMATED from a screenshot of the Studio preview (the Studio paste omits Paper). Change --page-bg + THEMES.paper to the exact hex. Mid-grey is the hardest paper for text (neither black nor white clears much more than 4.5:1), so page-level text is near-black and the schemes' teal accent is not used here */
 [data-theme="fisher"]{--page-bg:#E6EBE4;--page-muted:#52525B;--page-accent:#0B5568;--tex-ink:#004d65;--tex-opacity:0.06;--tex-2-ink:#669c35;--tex-2-opacity:0.02}   /* scheme 3: the main site's Spring paper */
 
 /* Texture layers. The declarations are the PMR texture snippets exactly as supplied; each is scoped to its scheme
@@ -125,6 +126,23 @@ try{var t=localStorage.getItem('pmrMaintenanceTheme'); if(t) document.documentEl
 /* scheme 2: no texture */
 [data-theme="classic"] .texture,[data-theme="classic"] .texture-2{display:none}
 
+/* scheme 4: PMR texture layer 1: crowe-1884-14685 (from US Design Patent 14,685). One layer, no fade. */
+[data-theme="crowe"] .texture{
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background-color:var(--tex-ink,#d58400);
+  opacity:var(--tex-opacity,0.335);
+  -webkit-mask-image:url("https://www.postmillenniumrenaissance.com/textures/masks/crowe-1884-14685.webp");
+  mask-image:url("https://www.postmillenniumrenaissance.com/textures/masks/crowe-1884-14685.webp");
+  -webkit-mask-size:244px auto;
+  mask-size:244px auto;
+  -webkit-mask-repeat:repeat;
+  mask-repeat:repeat;
+}
+[data-theme="crowe"] .texture-2{display:none}   /* this scheme is a single layer */
+
 /* scheme 3: PMR texture layer 1: fisher-1882-13110 (adapted from US Design Patent 13,110), fades top to bottom */
 [data-theme="fisher"] .texture{
   position:absolute;
@@ -165,7 +183,7 @@ try{var t=localStorage.getItem('pmrMaintenanceTheme'); if(t) document.documentEl
 body{position:relative;min-height:100vh;background:var(--page-bg);font-family:'Space Grotesk',system-ui,sans-serif;color:#18181B;-webkit-font-smoothing:antialiased}
 .wrap{max-width:30rem;margin:0 auto;padding:2rem 1rem}
 .eyebrow{font-family:'JetBrains Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.15em;color:var(--page-accent);font-weight:600;margin-bottom:.2rem}
-h1{font-size:1.5rem;font-weight:700}
+h1{font-size:1.5rem;font-weight:700;color:var(--page-ink,#18181B)}   /* --page-ink is set only by schemes whose paper needs a different heading color */
 .card{background:#fff;border:1px solid #E4E4E7;border-radius:1rem;padding:1.25rem;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:1rem}
 /* ── Gauge: dial + $ figures in one SVG. Capped at 16rem wide (it used to fill the card) because the figures now sit inside the arc. ── */
 .gauge-card{border-radius:1.5rem;padding:1rem 1.25rem .75rem}
@@ -669,18 +687,19 @@ var SHARE_BASE_URL='https://www.postmillenniumrenaissance.com/maintenance/';   /
 /* ==== THEMES REGISTRY — the color schemes the swatch button cycles through, in order. ====
    TO ADD A SCHEME: add ONE entry here AND one matching CSS block (see COLOR SCHEMES in the <style>: custom
    properties cannot be generated from JS). The button, the saved choice and the browser theme-color all derive from this.
-     id      matches [data-theme="id"] in the CSS and the saved choice            label   announced when the scheme changes
+     id      matches [data-theme="id"] in the CSS and the saved choice
      paper   page background, pushed to <meta name="theme-color"> (the mobile browser bar)
      credit  attribution lines shown in the footer while this scheme is active (the texture patents are expired, but we credit them)
    Scheme 2 ("classic") is the original look; scheme 1 is the default. Changing the default means: reorder this
    list, move that scheme's CSS block (with the bare :root) to the top of the CSS, change DEFAULT_THEME and the
    <html data-theme> + <meta theme-color> in the markup. ============================================== */
 var THEMES=[
-  {id:'day',label:'Color scheme 1 of 3',paper:'#ECEAE4',credit:['Background pattern adapted from US Design Patent No. 74,141 (Harry S. Day, 1927); the patent has long expired.']},
-  {id:'classic',label:'Color scheme 2 of 3',paper:'#FAFAFA',credit:[]},
-  {id:'fisher',label:'Color scheme 3 of 3',paper:'#E6EBE4',credit:[
+  {id:'day',paper:'#ECEAE4',credit:['Background pattern adapted from US Design Patent No. 74,141 (Harry S. Day, 1927); the patent has long expired.']},
+  {id:'classic',paper:'#FAFAFA',credit:[]},
+  {id:'fisher',paper:'#E6EBE4',credit:[
     'Background pattern adapted from US Design Patent No. 13,110 (John Fisher, 1882); the patent has long expired.',
-    'Background pattern adapted from US Design Patent No. 13,109 (Edwin Fisher, 1882); the patent has long expired.']}
+    'Background pattern adapted from US Design Patent No. 13,109 (Edwin Fisher, 1882); the patent has long expired.']},
+  {id:'crowe',paper:'#7B7D84',credit:['Background pattern from US Design Patent No. 14,685 (Eugene A. Crowe, 1884); the patent has long expired.']}
 ];
 var DEFAULT_THEME='day';
 var THEME_STORAGE_KEY='pmrMaintenanceTheme';   // preference only: the tool works with it empty. Also hard-coded in the <head> bootstrap script
@@ -1364,16 +1383,16 @@ function themeIndex(id){
 }
 function applyTheme(id,announce){
   var i=themeIndex(id); if(i<0) i=themeIndex(DEFAULT_THEME);
-  var th=THEMES[i];
+  var th=THEMES[i], label='Color scheme '+(i+1)+' of '+THEMES.length;   // numbered from the registry, so adding a scheme needs no label edit
   document.documentElement.setAttribute('data-theme',th.id);
   var meta=el('meta-theme-color'); if(meta) meta.setAttribute('content',th.paper);
   var credit=el('credit'); credit.textContent='';
   th.credit.forEach(function(line){ credit.appendChild(mk('p','',line)); });   // textContent, never innerHTML
-  var btn=el('btn-theme'), name='Switch color scheme. Current: '+th.label.toLowerCase();
+  var btn=el('btn-theme'), name='Switch color scheme. Current: '+label.toLowerCase();
   btn.setAttribute('aria-label',name); btn.setAttribute('title',name);
   if(announce){
-    setText('copy-tip',th.label);   // the status line under the icon buttons doubles as the scheme announcement
-    setTimeout(function(){ if(el('copy-tip').textContent===th.label) setText('copy-tip',''); },1800);
+    setText('copy-tip',label);   // the status line under the icon buttons doubles as the scheme announcement
+    setTimeout(function(){ if(el('copy-tip').textContent===label) setText('copy-tip',''); },1800);
   }
   return i;
 }
