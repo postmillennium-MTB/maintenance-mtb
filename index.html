@@ -8,6 +8,7 @@
   FILE MAP  (search the ALL-CAPS section labels to jump; line numbers drift)
 
   <head> / <style> ............... top of file
+    · COLOR SCHEMES ............. 3 themes + the PMR texture layers (scheme-scoped)
     · BASE, GAUGE, BREAKDOWN ..... cards, the dial (numbers live inside it), the "Where it goes" bar
     · 5-YEAR OUTLOOK ............. chart marks, tooltip, controls, table
     · SLIDERS, SKIP, SWITCH ...... line-item rows
@@ -20,6 +21,7 @@
   <script>
     ==== ALL DATA LIVES IN ONE CONTIGUOUS BLOCK AT THE TOP ====
     · wear-model constants ...... every worksheet assumption, named and commented
+    · THEMES registry ........... the 3 color schemes (swatch button); CSS blocks are under COLOR SCHEMES in <style>
     · SECTIONS registry ......... the cost categories (name, colour, print texture)
     · ITEMS registry ............ every line item: one entry = slider, totals, chart, share link
     · WS_GROUPS / WS_INPUTS / WS_RESULTS ... Ride Worksheet
@@ -31,13 +33,14 @@
     · share link, print, init
 
   TO ADD A LINE ITEM:        add ONE entry to ITEMS (at the end of the array).
+  TO ADD A COLOR SCHEME:     add ONE entry to THEMES + ONE [data-theme] block in the CSS (default scheme's block stays first).
   TO ADD A COST CATEGORY:    add ONE entry to SECTIONS, then point ITEMS entries at it.
   TO ADD A WORKSHEET INPUT:  add ONE entry to WS_INPUTS and use it in suggestions().
   TO CHANGE A WEAR ASSUMPTION: edit the named constant at the top of the data block (and the README table).
   SHARE LINKS: LEGACY_STATE_KEYS is frozen. Never reorder it; new settings ride in the named part.
 ==================================================================================
 -->
-<html lang="en">
+<html lang="en" data-theme="day">   <!-- data-theme is the no-JavaScript / first-paint fallback; the bootstrap script below and applyTheme() take over -->
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -47,7 +50,13 @@
 <title>MTB Annual Maintenance Cost — Post Millennium Renaissance</title>
 <meta name="description" content="Estimate your annual mountain bike maintenance cost by service item, project 5 years of spending, and size replacements from how you actually ride.">
 <meta name="color-scheme" content="light">
-<meta name="theme-color" content="#FAFAFA">
+<meta name="theme-color" content="#ECEAE4" id="meta-theme-color">
+<script>
+/* Apply the saved color scheme BEFORE first paint so there is no flash of the wrong scheme. An unknown value
+   simply matches no CSS block and falls back to the default (:root); the main script then validates it against THEMES.
+   Same key as THEME_STORAGE_KEY below. localStorage can be blocked (private mode, cross-origin iframe): try/catch. */
+try{var t=localStorage.getItem('pmrMaintenanceTheme'); if(t) document.documentElement.setAttribute('data-theme',t);}catch(e){}
+</script>
 <meta property="og:type" content="website">
 <meta property="og:title" content="MTB Annual Maintenance Cost — Post Millennium Renaissance">
 <meta property="og:description" content="Estimate your annual mountain bike maintenance cost by service item, project 5 years of spending, and size replacements from how you actually ride.">
@@ -56,12 +65,108 @@
 <meta name="twitter:card" content="summary">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
+/* ════════════════════════════════════════════════════════════════════════════
+   COLOR SCHEMES  —  three looks, chosen by <html data-theme="...">. The registry is THEMES in the script.
+   TO ADD A SCHEME: one entry in THEMES + one block here (custom properties cannot be generated from JS).
+   TRAP: ":root" and "[data-theme=...]" have IDENTICAL specificity (0,1,0), so whichever is declared LAST wins.
+   The DEFAULT scheme's block therefore goes FIRST and carries the bare :root; the others follow it.
+   Only page chrome changes per scheme. Cards, controls and every chart / gauge colour stay fixed, because those
+   colours mean something (category, budget / typical / premium) and were contrast-checked on white.
+     --page-bg     page background (body, so the texture layers sit above it)
+     --page-muted  secondary text that sits directly on the page, darker on the tinted schemes (4.5:1 on the paper + texture)
+     --page-accent eyebrow text on the page
+     --tex-*       texture ink + strength per layer
+   ════════════════════════════════════════════════════════════════════════════ */
+:root,[data-theme="day"]{--page-bg:#ECEAE4;--page-muted:#52525B;--page-accent:#0B5568;--tex-ink:#006d8f;--tex-opacity:0.1;--tex-2-opacity:0.1}   /* scheme 1 (default): the main site's Day paper */
+[data-theme="classic"]{--page-bg:#FAFAFA;--page-muted:#71717A;--page-accent:#0E7490}   /* scheme 2: the original look, no texture */
+[data-theme="fisher"]{--page-bg:#E6EBE4;--page-muted:#52525B;--page-accent:#0B5568;--tex-ink:#004d65;--tex-opacity:0.06;--tex-2-ink:#669c35;--tex-2-opacity:0.02}   /* scheme 3: the main site's Spring paper */
+
+/* Texture layers. The declarations are the PMR texture snippets exactly as supplied; each is scoped to its scheme
+   because the two schemes use different mask images, tile sizes and gradients. The mask images load from
+   postmillenniumrenaissance.com, so they appear only when this page is served from the web (not from a local file).
+   Layers are position:absolute (not fixed) so they stay inside an iframe. */
+
+/* scheme 1: PMR texture layer 1: day-1927-74141 (adapted from US Design Patent 74,141), fades top to bottom */
+[data-theme="day"] .texture{
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background-color:var(--tex-ink,#006d8f);
+  opacity:var(--tex-opacity,0.1);
+  -webkit-mask-image:linear-gradient(to bottom, #000 0%, rgba(0,0,0,0) 100%), url("https://www.postmillenniumrenaissance.com/textures/masks/day-1927-74141.webp");
+  mask-image:linear-gradient(to bottom, #000 0%, rgba(0,0,0,0) 100%), url("https://www.postmillenniumrenaissance.com/textures/masks/day-1927-74141.webp");
+  -webkit-mask-size:100% 100%, 200px auto;
+  mask-size:100% 100%, 200px auto;
+  -webkit-mask-repeat:no-repeat, repeat;
+  mask-repeat:no-repeat, repeat;
+  -webkit-mask-composite:source-in;
+  mask-composite:intersect;
+}
+
+/* scheme 1: PMR texture layer 2: day-1927-74141 (adapted from US Design Patent 74,141), fades bottom to top */
+[data-theme="day"] .texture-2{
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background-color:var(--tex-ink,#006d8f);
+  opacity:var(--tex-2-opacity,0.1);
+  -webkit-mask-image:linear-gradient(to top, #000 5%, rgba(0,0,0,0) 100%), url("https://www.postmillenniumrenaissance.com/textures/masks/day-1927-74141.webp");
+  mask-image:linear-gradient(to top, #000 5%, rgba(0,0,0,0) 100%), url("https://www.postmillenniumrenaissance.com/textures/masks/day-1927-74141.webp");
+  -webkit-mask-size:100% 100%, 200px auto;
+  mask-size:100% 100%, 200px auto;
+  -webkit-mask-repeat:no-repeat, repeat;
+  mask-repeat:no-repeat, repeat;
+  -webkit-mask-composite:source-in;
+  mask-composite:intersect;
+}
+
+/* scheme 2: no texture */
+[data-theme="classic"] .texture,[data-theme="classic"] .texture-2{display:none}
+
+/* scheme 3: PMR texture layer 1: fisher-1882-13110 (adapted from US Design Patent 13,110), fades top to bottom */
+[data-theme="fisher"] .texture{
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background-color:var(--tex-ink,#004d65);
+  opacity:var(--tex-opacity,0.06);
+  -webkit-mask-image:linear-gradient(to bottom, #000 0%, rgba(0,0,0,0) 100%), url("https://www.postmillenniumrenaissance.com/textures/masks/fisher-1882-13110.webp");
+  mask-image:linear-gradient(to bottom, #000 0%, rgba(0,0,0,0) 100%), url("https://www.postmillenniumrenaissance.com/textures/masks/fisher-1882-13110.webp");
+  -webkit-mask-size:100% 100%, 108px auto;
+  mask-size:100% 100%, 108px auto;
+  -webkit-mask-repeat:no-repeat, repeat;
+  mask-repeat:no-repeat, repeat;
+  -webkit-mask-composite:source-in;
+  mask-composite:intersect;
+}
+
+/* scheme 3: PMR texture layer 2: fisher-1882-13109 (adapted from US Design Patent 13,109), fades bottom to top */
+[data-theme="fisher"] .texture-2{
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background-color:var(--tex-2-ink,#669c35);
+  opacity:var(--tex-2-opacity,0.02);
+  -webkit-mask-image:linear-gradient(to top, #000 0%, rgba(0,0,0,0) 100%), url("https://www.postmillenniumrenaissance.com/textures/masks/fisher-1882-13109.webp");
+  mask-image:linear-gradient(to top, #000 0%, rgba(0,0,0,0) 100%), url("https://www.postmillenniumrenaissance.com/textures/masks/fisher-1882-13109.webp");
+  -webkit-mask-size:100% 100%, 200px auto;
+  mask-size:100% 100%, 200px auto;
+  -webkit-mask-repeat:no-repeat, repeat;
+  mask-repeat:no-repeat, repeat;
+  -webkit-mask-composite:source-in;
+  mask-composite:intersect;
+}
+
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#FAFAFA;font-family:'Space Grotesk',system-ui,sans-serif;color:#18181B;-webkit-font-smoothing:antialiased}
+body{position:relative;min-height:100vh;background:var(--page-bg);font-family:'Space Grotesk',system-ui,sans-serif;color:#18181B;-webkit-font-smoothing:antialiased}
 .wrap{max-width:30rem;margin:0 auto;padding:2rem 1rem}
-.eyebrow{font-family:'JetBrains Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.15em;color:#0E7490;font-weight:600;margin-bottom:.2rem}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.15em;color:var(--page-accent);font-weight:600;margin-bottom:.2rem}
 h1{font-size:1.5rem;font-weight:700}
-.sub-head{font-size:.875rem;color:#71717A;margin-top:.25rem;margin-bottom:1.5rem}
+.sub-head{font-size:.875rem;color:var(--page-muted);margin-top:.25rem;margin-bottom:1.5rem}
 .card{background:#fff;border:1px solid #E4E4E7;border-radius:1rem;padding:1.25rem;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:1rem}
 /* ── Gauge: dial + $ figures in one SVG. Capped at 16rem wide (it used to fill the card) because the figures now sit inside the arc. ── */
 .gauge-card{border-radius:1.5rem;padding:1rem 1.25rem .75rem}
@@ -133,7 +238,11 @@ details.ws[open] .chevron{transform:rotate(180deg)}
 .sections{display:flex;flex-direction:column;gap:1rem}
 .reset-btn{width:100%;min-height:44px;margin-top:1.25rem;padding:.75rem;border-radius:.75rem;border:1px solid #D4D4D8;background:#fff;color:#71717A;font-size:.875rem;font-weight:500;font-family:'Space Grotesk',system-ui,sans-serif;cursor:pointer}
 .reset-btn:hover{background:#F4F4F5}
-.footnote{font-size:.7rem;color:#71717A;margin-top:1rem;line-height:1.6}
+.footnote{font-size:.7rem;color:var(--page-muted);margin-top:1rem;line-height:1.6}
+.credit{font-size:.65rem;color:var(--page-muted);margin-top:.6rem;line-height:1.5}
+.credit:empty{display:none}   /* scheme 2 has no texture, so nothing to credit */
+.credit p+p{margin-top:.25rem}
+.badge-row{display:flex;align-items:center;gap:.5rem}
 .top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}
 .pmr-badge{flex-shrink:0;width:52px;height:52px;display:block}
 .pmr-badge:hover{opacity:.85}
@@ -259,10 +368,10 @@ details.proj-table th[scope="row"]{text-align:left;color:#71717A}
    the browser's own header/footer if the user leaves them on. */
 @page{margin:.5in}
 *{-webkit-print-color-adjust:exact;print-color-adjust:exact;box-shadow:none!important;transition:none!important;animation:none!important}
-body{background:#fff;color:var(--p-ink)}
+body{background:#fff;color:var(--p-ink);min-height:0}
 
 /* ── Chrome that is meaningless on paper ── */
-.reset-btn,.icon-row,.copy-tip,.ws-apply,.ws-reset,.ws-apply-note,.proj-controls,details.adv,details.proj-table,.tip,.chevron,.bat-egg,#go-overlay,.skip-btn:not(.active){display:none!important}   /* .ws-apply-note explains a button that is hidden on paper; it also kept the footer off page 2 */
+.reset-btn,.icon-row,.badge-row .icon-btn,.texture,.texture-2,.credit,.copy-tip,.ws-apply,.ws-reset,.ws-apply-note,.proj-controls,details.adv,details.proj-table,.tip,.chevron,.bat-egg,#go-overlay,.skip-btn:not(.active){display:none!important}   /* .ws-apply-note explains a button that is hidden on paper; it also kept the footer off page 2 */
 .skip-btn.active{border:1px solid var(--p-ink2);background:#fff;color:var(--p-ink2);font-size:.75rem}
 .pmr-badge{width:44px;height:44px}
 /* Screen touch targets (40px chips, 40px-tall sliders) would bloat the page; paper doesn't need them. */
@@ -378,6 +487,9 @@ details.ws summary{padding:0 0 .5rem;list-style:none}
 </style>
 </head>
 <body>
+<!-- Texture layers (see COLOR SCHEMES in the CSS). Decorative, so hidden from assistive tech. They must be the first children of <body>. -->
+<div class="texture" aria-hidden="true"></div>
+<div class="texture-2" aria-hidden="true"></div>
 <div class="wrap">
   <div class="top-row">
     <div>
@@ -386,14 +498,18 @@ details.ws summary{padding:0 0 .5rem;list-style:none}
       <p class="sub-head">Dial in each line item to estimate your yearly spend.</p>
     </div>
     <div class="top-actions">
-      <a href="https://www.postmillenniumrenaissance.com" target="_blank" rel="noopener" class="pmr-badge" aria-label="Visit Post Millennium Renaissance">
-        <svg viewBox="0 0 100 100" width="100%" height="100%">
-          <polygon points="50,2 58,12 69,6 73,18 86,15 86,28 98,32 93,44 100,55 89,61 91,74 78,75 74,88 62,84 55,95 46,86 35,94 30,81 17,82 15,69 3,64 10,53 2,42 14,37 12,24 25,24 28,11 40,15" fill="#B08D57"/>
-          <ellipse cx="50" cy="50" rx="34" ry="24" fill="#FAFAFA"/>
-          <ellipse cx="50" cy="50" rx="30" ry="20" fill="none" stroke="#B08D57" stroke-width="1.5"/>
-          <text x="50" y="58" text-anchor="middle" font-family="'Space Grotesk',system-ui,sans-serif" font-weight="700" font-size="22" fill="#0E5A73">PMR</text>
-        </svg>
-      </a>
+      <!-- Icon: Lucide "swatch-book" (ISC licence), inline so the file stays zero-dependency. Cycles the color scheme (THEMES registry). -->
+      <div class="badge-row">
+        <button type="button" class="icon-btn" id="btn-theme" aria-label="Switch color scheme" title="Switch color scheme"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-swatch-book" aria-hidden="true" focusable="false"><path d="M11 17a4 4 0 0 1-8 0V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2Z"/><path d="M16.7 13H19a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H7"/><path d="M 7 17h.01"/><path d="m11 8 2.3-2.3a2.4 2.4 0 0 1 3.404.004L18.6 7.6a2.4 2.4 0 0 1 .026 3.434L9.9 19.8"/></svg></button>
+        <a href="https://www.postmillenniumrenaissance.com" target="_blank" rel="noopener" class="pmr-badge" aria-label="Visit Post Millennium Renaissance">
+          <svg viewBox="0 0 100 100" width="100%" height="100%">
+            <polygon points="50,2 58,12 69,6 73,18 86,15 86,28 98,32 93,44 100,55 89,61 91,74 78,75 74,88 62,84 55,95 46,86 35,94 30,81 17,82 15,69 3,64 10,53 2,42 14,37 12,24 25,24 28,11 40,15" fill="#B08D57"/>
+            <ellipse cx="50" cy="50" rx="34" ry="24" fill="#FAFAFA"/>
+            <ellipse cx="50" cy="50" rx="30" ry="20" fill="none" stroke="#B08D57" stroke-width="1.5"/>
+            <text x="50" y="58" text-anchor="middle" font-family="'Space Grotesk',system-ui,sans-serif" font-weight="700" font-size="22" fill="#0E5A73">PMR</text>
+          </svg>
+        </a>
+      </div>
       <!-- Icons: Lucide "send" (paper plane = share), "check" (copied confirmation) and "printer" (ISC licence), inline so the file stays zero-dependency. -->
       <div class="icon-row">
         <button type="button" class="icon-btn" id="btn-share" aria-label="Copy share link" title="Copy share link"><svg class="lucide lucide-send ic-send" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg><svg class="lucide lucide-check ic-done" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg></button>
@@ -494,6 +610,7 @@ details.ws summary{padding:0 0 .5rem;list-style:none}
 
   <button class="reset-btn" id="btn-reset">Reset to defaults</button>
   <p class="footnote">* Interval not specified in original spec &#8212; defaulted to annual (24 months for pivot bearings). Defaults reflect typical US retail pricing; adjust to your setup.</p>
+  <div class="credit" id="credit"></div>   <!-- filled by applyTheme() from THEMES[].credit -->
 
   <!-- Print-only footer (hidden on screen). QR is a STATIC inline SVG, so the file stays zero-dependency.
        Encodes https://www.postmillenniumrenaissance.com/ — error-correction level Q (survives toner
@@ -553,6 +670,25 @@ var INFLATION_CHOICES=[0,1,2,3,4,5,6,7];   // % per year offered in the 5-year o
 var DEFAULT_INFLATION=3;       // % per year selected on first load
 var MAX_AGE_MONTHS=36;         // top of the "months since last replaced" sliders (= the longest interval)
 var SHARE_BASE_URL='https://www.postmillenniumrenaissance.com/maintenance/';   // share links always point at the PMR page, not the bare github.io frame
+
+/* ==== THEMES REGISTRY — the color schemes the swatch button cycles through, in order. ====
+   TO ADD A SCHEME: add ONE entry here AND one matching CSS block (see COLOR SCHEMES in the <style>: custom
+   properties cannot be generated from JS). The button, the saved choice and the browser theme-color all derive from this.
+     id      matches [data-theme="id"] in the CSS and the saved choice            label   announced when the scheme changes
+     paper   page background, pushed to <meta name="theme-color"> (the mobile browser bar)
+     credit  attribution lines shown in the footer while this scheme is active (the texture patents are expired, but we credit them)
+   Scheme 2 ("classic") is the original look; scheme 1 is the default. Changing the default means: reorder this
+   list, move that scheme's CSS block (with the bare :root) to the top of the CSS, change DEFAULT_THEME and the
+   <html data-theme> + <meta theme-color> in the markup. ============================================== */
+var THEMES=[
+  {id:'day',label:'Color scheme 1 of 3',paper:'#ECEAE4',credit:['Background pattern adapted from US Design Patent No. 74,141 (Harry S. Day, 1927); the patent has long expired.']},
+  {id:'classic',label:'Color scheme 2 of 3',paper:'#FAFAFA',credit:[]},
+  {id:'fisher',label:'Color scheme 3 of 3',paper:'#E6EBE4',credit:[
+    'Background pattern adapted from US Design Patent No. 13,110 (John Fisher, 1882); the patent has long expired.',
+    'Background pattern adapted from US Design Patent No. 13,109 (Edwin Fisher, 1882); the patent has long expired.']}
+];
+var DEFAULT_THEME='day';
+var THEME_STORAGE_KEY='pmrMaintenanceTheme';   // preference only: the tool works with it empty. Also hard-coded in the <head> bootstrap script
 
 /* ==== SECTIONS REGISTRY — the single source of truth for every cost category. ============
    Drives: the section cards, the "Where it goes" bar + legend, the chart's stacked segments and legend, the table.
@@ -1226,6 +1362,33 @@ document.addEventListener('click', function(e){
 })();
 
 
+// ── Color scheme ───────────────────────────────────────────────────────────
+function themeIndex(id){
+  for(var i=0;i<THEMES.length;i++) if(THEMES[i].id===id) return i;
+  return -1;
+}
+function applyTheme(id,announce){
+  var i=themeIndex(id); if(i<0) i=themeIndex(DEFAULT_THEME);
+  var th=THEMES[i];
+  document.documentElement.setAttribute('data-theme',th.id);
+  var meta=el('meta-theme-color'); if(meta) meta.setAttribute('content',th.paper);
+  var credit=el('credit'); credit.textContent='';
+  th.credit.forEach(function(line){ credit.appendChild(mk('p','',line)); });   // textContent, never innerHTML
+  var btn=el('btn-theme'), name='Switch color scheme. Current: '+th.label.toLowerCase();
+  btn.setAttribute('aria-label',name); btn.setAttribute('title',name);
+  if(announce){
+    setText('copy-tip',th.label);   // the status line under the icon buttons doubles as the scheme announcement
+    setTimeout(function(){ if(el('copy-tip').textContent===th.label) setText('copy-tip',''); },1800);
+  }
+  return i;
+}
+document.addEventListener('click', function(e){
+  if(!(e.target.closest && e.target.closest('#btn-theme'))) return;
+  var next=THEMES[(themeIndex(document.documentElement.getAttribute('data-theme'))+1)%THEMES.length].id;
+  applyTheme(next,true);
+  try{ localStorage.setItem(THEME_STORAGE_KEY,next); }catch(err){}   // saved only when the visitor chooses, never on plain load (an old default must not stick as a "choice")
+});
+
 // ── Share link ─────────────────────────────────────────────────────────────
 /* Format:  <legacy values, comma-separated> . <battery 0/1> . <skip bits> [ . <named key:value pairs> ]
    The first three parts are the ORIGINAL format and never change. The optional 4th part carries every other
@@ -1315,6 +1478,7 @@ document.addEventListener('click', function(e){
 stampPrintDate();
 
 // ── Init ───────────────────────────────────────────────────────────────────
+(function(){ var saved=null; try{ saved=localStorage.getItem(THEME_STORAGE_KEY); }catch(err){} applyTheme(themeIndex(saved)>=0?saved:DEFAULT_THEME,false); })();
 loadFromURL();
 build();
 initGauge();
