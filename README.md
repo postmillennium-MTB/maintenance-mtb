@@ -173,3 +173,11 @@ This calculator is one of a growing set of interactive MTB tools built for rider
 
 *Built by Jon @ Post Millennium Renaissance MTB — Castle Rock, Colorado*
 *Writing at [Pinkbike](https://www.pinkbike.com) · Advocacy for Philip S. Miller Park & Ridgeline Open Space*
+
+## License
+
+Copyright (c) 2026 Post Millennium Renaissance (https://www.postmillenniumrenaissance.com).
+
+Released under the [PolyForm Noncommercial License 1.0.0](LICENSE). In short: free to use, copy, modify and share for any noncommercial purpose, including personal use, research, education, and use by charities, environmental-protection organizations and government institutions. Commercial use needs a separate license; ask through postmillenniumrenaissance.com. Copies must keep the `Required Notice:` line in `LICENSE`. The license text controls over this summary.
+
+Facts, figures and quotations taken from third-party studies and sources remain the property of their authors. This license covers only this project's own code, selection and arrangement of material, and original text. Third-party components keep their own licenses.
