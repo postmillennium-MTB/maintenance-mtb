@@ -33,6 +33,7 @@
     · share link, print, init
 
   TO ADD A LINE ITEM:        add ONE entry to ITEMS (at the end of the array).
+  COMPACT VIEW: <html data-density> + the '@media screen' block named Compact view in the CSS (phones default to it).
   TO MAKE A CARD COLLAPSIBLE: data-panel on the card + .panel-body around its content (see Collapsible panels in the script).
   TO ADD A COLOR SCHEME:     add ONE entry to THEMES + ONE [data-theme] block in the CSS (default scheme's block stays first).
   TO ADD A COST CATEGORY:    add ONE entry to SECTIONS, then point ITEMS entries at it.
@@ -57,6 +58,11 @@
    simply matches no CSS block and falls back to the default (:root); the main script then validates it against THEMES.
    Same key as THEME_STORAGE_KEY below. localStorage can be blocked (private mode, cross-origin iframe): try/catch. */
 try{var t=localStorage.getItem('pmrMaintenanceTheme'); if(t) document.documentElement.setAttribute('data-theme',t);}catch(e){}
+/* Same idea for the layout density: a saved choice wins; otherwise phones (<= 640px wide) get compact, everything else regular.
+   Same key / query as DENSITY_STORAGE_KEY / COMPACT_QUERY in the main script. */
+var d=null; try{ d=localStorage.getItem('pmrMaintenanceDensity'); }catch(e){}
+if(d!=='compact' && d!=='regular') d=(window.matchMedia && window.matchMedia('(max-width: 640px)').matches)?'compact':'regular';
+document.documentElement.setAttribute('data-density',d);
 </script>
 <meta property="og:type" content="website">
 <meta property="og:title" content="MTB Annual Maintenance Cost — Post Millennium Renaissance">
@@ -212,7 +218,7 @@ h1{font-size:1.5rem;font-weight:700;color:var(--page-ink,#18181B)}   /* --page-i
 .panel-chev{flex-shrink:0;width:18px;height:18px;color:#71717A;transform:none}
 .card.collapsed .panel-chev{transform:rotate(-90deg)}   /* points right while collapsed, down while open */
 .panel-body{padding-top:.4rem}
-.panel-tools{display:flex;justify-content:flex-end;margin:-.5rem 0 .25rem}
+.panel-tools{display:flex;justify-content:space-between;gap:.5rem;margin:-.5rem 0 .25rem}
 .link-btn{min-height:44px;padding:0 .25rem;border:none;background:none;color:var(--page-accent);font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .section-title{font-size:1rem;font-weight:600;color:#3F3F46}
 .section-total{font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:600;color:#0E7490}
@@ -338,6 +344,35 @@ details.proj-table table{width:100%;min-width:21rem;border-collapse:collapse;fon
 details.proj-table th,details.proj-table td{padding:.3rem .25rem;text-align:right;border-bottom:1px solid #F4F4F5;color:#3F3F46}
 details.proj-table thead th{color:#71717A;font-weight:600}
 details.proj-table th[scope="row"]{text-align:left;color:#71717A}
+
+/* ── Compact view ──
+   <html data-density="compact"> (set by the head script / applyDensity). Phones get it by default, desktops the regular view.
+   Everything here is inside @media screen on purpose: the print block uses lower-specificity selectors, so an unguarded
+   [data-density] rule would beat it and change the printout. What changes: card + row padding, the chips drop from 40px to
+   32px tall and move onto the label line when they fit, sliders go from 40px to 28px tall. Still above the 24px WCAG minimum. */
+@media screen{
+  [data-density="compact"] .wrap{padding-top:1.25rem;padding-bottom:1.25rem}
+  [data-density="compact"] .card{padding:.875rem 1rem;margin-bottom:.75rem;border-radius:.875rem}
+  [data-density="compact"] .gauge-card{padding:.5rem 1rem .25rem;border-radius:1.25rem}
+  [data-density="compact"] #gauge-svg{max-width:13.5rem}
+  [data-density="compact"] .top-row{margin-bottom:.75rem}
+  [data-density="compact"] .sections{gap:.75rem}
+  [data-density="compact"] .panel-body{padding-top:.1rem}
+  [data-density="compact"] .section-sub{margin-bottom:0}
+  [data-density="compact"] .item{padding:.5rem 0}
+  [data-density="compact"] .item-head{margin-bottom:0;gap:.25rem .4rem}
+  [data-density="compact"] .item-label-group{order:1;flex:1 1 0;min-width:0}   /* basis 0: the label group takes whatever the chips and price leave, and wraps its own badge instead of pushing the price onto a new line */
+  [data-density="compact"] .item-chips{order:2;flex:0 0 auto;margin:0;gap:.3rem}   /* beside the label when it fits, else wraps to its own row as before */
+  [data-density="compact"] .item-val{order:3;flex:0 0 auto;margin-left:auto}
+  [data-density="compact"] .skip-btn,[data-density="compact"] .badge-btn{min-height:32px;min-width:32px;padding:.1rem .5rem;font-size:.65rem}
+  [data-density="compact"] input[type=range]{height:28px}
+  [data-density="compact"] .ticks{margin-top:-.2rem}   /* thumb bottom sits 3px below the shorter input, so the labels tuck right under it */
+  [data-density="compact"] .toggle-row{padding:.5rem 0}
+  [data-density="compact"] .proj-controls{margin:.35rem 0 .5rem}
+  [data-density="compact"] .seg-btn,[data-density="compact"] .infl select{min-height:36px}
+  [data-density="compact"] .ws-group{margin:.25rem 0 0}
+  [data-density="compact"] .ws-result{margin-top:.5rem;padding:.75rem}
+}
 
 /* ── Skip it ── */
 .skip-btn{font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;min-height:40px;min-width:40px;padding:.25rem .7rem;border-radius:.375rem;border:1px solid #E4E4E7;background:#fff;color:#71717A;cursor:pointer;flex-shrink:0;line-height:1.4}
@@ -571,8 +606,11 @@ details.ws summary{padding:0 0 .5rem;list-style:none}
     </svg>
   </div>
 
-  <!-- Collapse / expand every panel at once: helps on a phone, where the page is a long scroll. initPanels() wires it. -->
-  <div class="panel-tools"><button type="button" class="link-btn" id="btn-panels-all">Collapse all panels</button></div>
+  <!-- View options: compact / regular density, and collapse / expand every panel at once. Both help on a phone, where the page is a long scroll. -->
+  <div class="panel-tools">
+    <button type="button" class="link-btn" id="btn-density">Compact view</button>
+    <button type="button" class="link-btn" id="btn-panels-all">Collapse all panels</button>
+  </div>
 
   <!-- Breakdown bar + legend: BUILT FROM THE `SECTIONS` REGISTRY in the script below. -->
   <div class="card" data-panel="break">
@@ -1290,6 +1328,31 @@ function initPanels(){
 }
 
 document.addEventListener('toggle',function(e){ if(e.target.matches&&e.target.matches('details.ws')) syncPanelsAll(); },true);   // 'toggle' does not bubble, hence capture
+
+// ── Layout density (compact / regular) ─────────────────────────────────────
+var DENSITY_STORAGE_KEY='pmrMaintenanceDensity';   // preference only; also hard-coded in the <head> script
+var COMPACT_QUERY='(max-width: 640px)';            // phones default to compact; the head script uses the same query
+function autoDensity(){ return window.matchMedia(COMPACT_QUERY).matches?'compact':'regular'; }
+function applyDensity(mode){
+  document.documentElement.setAttribute('data-density',mode);
+  var b=el('btn-density');
+  b.textContent=mode==='compact'?'Regular view':'Compact view';   // names the view you would switch TO
+  b.setAttribute('aria-label',mode==='compact'?'Switch to regular layout':'Switch to compact layout');
+}
+(function initDensity(){
+  var saved=null; try{ saved=localStorage.getItem(DENSITY_STORAGE_KEY); }catch(err){}
+  var chosen=(saved==='compact'||saved==='regular');
+  applyDensity(chosen?saved:autoDensity());
+  // With no saved choice, follow the screen (rotating a phone, resizing a window); a saved choice always wins.
+  var mq=window.matchMedia(COMPACT_QUERY), onChange=function(){ if(!chosen) applyDensity(autoDensity()); };
+  if(mq.addEventListener) mq.addEventListener('change',onChange); else if(mq.addListener) mq.addListener(onChange);
+  document.addEventListener('click',function(e){
+    if(!(e.target.closest && e.target.closest('#btn-density'))) return;
+    var next=document.documentElement.getAttribute('data-density')==='compact'?'regular':'compact';
+    chosen=true; applyDensity(next);
+    try{ localStorage.setItem(DENSITY_STORAGE_KEY,next); }catch(err){}   // saved only when the visitor chooses
+  });
+})();
 
 // ── Controls <-> state ─────────────────────────────────────────────────────
 /* syncControls() pushes S into every control (sliders, interval badges, switch, dropdown, view toggle, skip chips).
