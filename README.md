@@ -18,7 +18,8 @@ Live: [postmillennium-mtb.github.io/maintenance-mtb](https://postmillennium-mtb.
 - **"Where it goes" breakdown bar** showing the proportion of spend across four categories
 - **Ride Worksheet** — a collapsible section where you enter your riding volume (XC rides/week, miles/ride, enduro rides, and bike park days, which can be 0) and the tool suggests how many tires, brake pad sets, rotors, chains per year, and sealant refills you're likely to burn through per year
 - **Apply to dials** button — pushes all five worksheet suggestions into the dials: tire / pad / rotor quantities, the sealant dial (refills × $25), and the chain interval (chains/yr snapped to 12 / 24 / 36 months). Each value is clamped to its dial's range (max 7 tires, 12 pad sets, 4 rotors)
-- **Share link** — copies a link to postmillenniumrenaissance.com/maintenance/ with your settings in the URL hash (`#s=…`). Links in the old `?s=` format still load. Malformed values fall back to defaults and out-of-range values are clamped
+- **Share and print icons** — Lucide paper-plane (share) and printer icon buttons sit under the PMR badge at the top. Share turns into a check mark with a "Link copied!" note for 2 seconds. Both are named by `aria-label`, 44px touch targets, and hidden on the printout
+- **Share link** — the paper-plane button copies a link to postmillenniumrenaissance.com/maintenance/ with your settings in the URL hash (`#s=…`). Links in the old `?s=` format still load. Malformed values fall back to defaults and out-of-range values are clamped
 - **E-bike battery toggle** — adds a $25/yr reserve for eventual battery replacement; off by default for analog bikes
 - **Reset to defaults** button
 
