@@ -18,11 +18,11 @@ h1{font-size:1.5rem;font-weight:700}
 .card{background:#fff;border:1px solid #E4E4E7;border-radius:1rem;padding:1.25rem;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:1rem}
 .gauge-card{border-radius:1.5rem;padding:1.5rem}
 #gauge-svg{width:100%}
-.gauge-labels{display:flex;justify-content:space-between;padding:0 .5rem;margin-top:-.5rem;font-family:'JetBrains Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.04em;color:#A1A1AA}
+.gauge-labels{display:flex;justify-content:space-between;padding:0 .5rem;margin-top:-.5rem;font-family:'JetBrains Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.04em;color:#71717A}
 .big-total{text-align:center;margin-top:.25rem}
 .big-num{font-family:'JetBrains Mono',monospace;font-size:2.25rem;font-weight:700;font-variant-numeric:tabular-nums}
-.big-num small{font-size:1rem;font-weight:500;color:#A1A1AA;margin-left:.25rem}
-.big-mo{font-family:'JetBrains Mono',monospace;font-size:.875rem;color:#A1A1AA;margin-top:.125rem}
+.big-num small{font-size:1rem;font-weight:500;color:#71717A;margin-left:.25rem}
+.big-mo{font-family:'JetBrains Mono',monospace;font-size:.875rem;color:#71717A;margin-top:.125rem}
 .bar-wrap{display:flex;height:10px;border-radius:999px;overflow:hidden;background:#F4F4F5;margin-bottom:.75rem}
 .bar-seg{height:100%;transition:width .2s}
 /* Category colors live here ONCE; the breakdown bar and its legend dots both use them (the print block re-skins them with patterns). */
@@ -38,35 +38,38 @@ h1{font-size:1.5rem;font-weight:700}
 .section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:.2rem}
 .section-title{font-size:1rem;font-weight:600;color:#3F3F46}
 .section-total{font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:600;color:#0E7490}
-.section-sub{font-size:.72rem;color:#A1A1AA;margin-bottom:.1rem}
+.section-sub{font-size:.72rem;color:#71717A;margin-bottom:.1rem}
 .divide>*+*{border-top:1px solid #F4F4F5}
 .item{padding:.875rem 0}
 .item-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.5rem;flex-wrap:wrap}
-.item-label-group{display:flex;align-items:center;gap:.5rem;min-width:0}
+.item-label-group{display:flex;align-items:center;gap:.5rem;min-width:0;flex-wrap:wrap}
+.item-chips{flex:0 0 100%;display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.1rem}   /* own row on screen; print block puts it back inline */
 .item-label{font-size:.875rem;font-weight:500;color:#3F3F46}
 .item-val{font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:600;color:#18181B;font-variant-numeric:tabular-nums;flex-shrink:0}
 .badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:.1rem .45rem;border-radius:.375rem;border:1px dashed #0E7490;color:#0E7490;flex-shrink:0;line-height:1.4}
-.badge-btn{background:#FAFAFA;border-style:solid;cursor:pointer}
+.badge-btn{background:#FAFAFA;border-style:solid;cursor:pointer;min-height:40px;min-width:40px;padding:.25rem .7rem;font-size:.7rem}   /* 40px touch target; plain (non-clickable) .badge spans stay compact */
 .badge-btn:hover{background:#E0F2FE}
-.ticks{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:.65rem;color:#A1A1AA;margin-top:.2rem}
-input[type=range]{-webkit-appearance:none;appearance:none;width:100%;background:transparent;cursor:pointer}
+.ticks{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:.65rem;color:#71717A;margin-top:-.55rem}   /* negative: pulls the labels up under the 40px-tall slider hit area (see range block) */
+/* Touch target: the <input> itself is 40px tall (the visible track stays 5px, centered), so a finger anywhere in that band grabs the slider. */
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:40px;background:transparent;cursor:pointer}
 input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:999px;background:#E4E4E7}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:4px;background:#18181B;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35);margin-top:-5.5px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:5px;background:#18181B;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35);margin-top:-8.5px}   /* margin-top = (track 5 - thumb 18 - 2x2 border) / 2 centers it on the track */
 input[type=range]::-moz-range-track{height:5px;border-radius:999px;background:#E4E4E7}
-input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:4px;background:#18181B;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:5px;background:#18181B;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35)}
 .toggle-row{display:flex;align-items:flex-start;justify-content:space-between;padding:.875rem 0;gap:.75rem}
 .toggle-text{min-width:0}
 .toggle-label-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem}
-.toggle-desc{font-size:.72rem;color:#A1A1AA;line-height:1.5}
+.toggle-desc{font-size:.72rem;color:#71717A;line-height:1.5}
 .toggle-amt{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:#0E7490;font-weight:600}
 .switch{position:relative;width:44px;height:24px;border-radius:999px;border:none;cursor:pointer;flex-shrink:0;background:#E4E4E7;transition:background .15s;margin-top:.125rem}
+.switch::before{content:"";position:absolute;inset:-10px -4px}   /* invisible hit area: 44x44px around the 44x24 visual switch */
 .switch.on{background:#0E7490}
 .knob{position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:999px;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .15s;display:block;pointer-events:none}
 .switch.on .knob{transform:translateX(20px)}
 details.ws{background:#fff;border:1px solid #E4E4E7;border-radius:1rem;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:1rem;overflow:hidden}
 details.ws summary{display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer;list-style:none;user-select:none}
 details.ws summary::-webkit-details-marker{display:none}
-.chevron{font-size:1rem;color:#A1A1AA;transition:transform .2s;display:inline-block}
+.chevron{font-size:1rem;color:#71717A;transition:transform .2s;display:inline-block}
 details.ws[open] .chevron{transform:rotate(180deg)}
 .ws-body{padding:0 1.25rem 1.25rem}
 .ws-group{font-family:'JetBrains Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:#0E7490;font-weight:700;margin:.5rem 0 .25rem}
@@ -74,34 +77,34 @@ details.ws[open] .chevron{transform:rotate(180deg)}
 .ws-result{margin-top:1rem;padding:1rem;background:#FAFAFA;border:1px solid #E4E4E7;border-radius:.75rem}
 .ws-result-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:.75rem}
 .ws-result-title{font-size:.8rem;font-weight:600;color:#3F3F46}
-.ws-miles{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:#A1A1AA}
+.ws-miles{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:#71717A}
 .ws-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.4rem}
 .ws-cell{text-align:center;padding:.5rem .2rem;background:#fff;border:1px solid #E4E4E7;border-radius:.5rem}
 .ws-num{display:block;font-family:'JetBrains Mono',monospace;font-size:1.25rem;font-weight:700;color:#0E7490}
-.ws-cap{display:block;font-size:.58rem;text-transform:uppercase;letter-spacing:.02em;color:#A1A1AA;margin-top:.1rem}
-.ws-apply{width:100%;margin-top:.75rem;padding:.625rem;border-radius:.5rem;border:none;background:#0E7490;color:#fff;font-size:.8rem;font-weight:600;font-family:'Space Grotesk',system-ui,sans-serif;cursor:pointer}
+.ws-cap{display:block;font-size:.65rem;text-transform:uppercase;letter-spacing:.02em;color:#71717A;margin-top:.1rem}
+.ws-apply{width:100%;min-height:44px;margin-top:.75rem;padding:.625rem;border-radius:.5rem;border:none;background:#0E7490;color:#fff;font-size:.8rem;font-weight:600;font-family:'Space Grotesk',system-ui,sans-serif;cursor:pointer}
 .ws-apply:hover{background:#0C617A}
-.ws-note{font-size:.65rem;color:#A1A1AA;margin-top:.625rem;line-height:1.5}
+.ws-note{font-size:.65rem;color:#71717A;margin-top:.625rem;line-height:1.5}
 .sections{display:flex;flex-direction:column;gap:1rem}
-.reset-btn{width:100%;margin-top:1.25rem;padding:.75rem;border-radius:.75rem;border:1px solid #D4D4D8;background:#fff;color:#71717A;font-size:.875rem;font-weight:500;font-family:'Space Grotesk',system-ui,sans-serif;cursor:pointer}
+.reset-btn{width:100%;min-height:44px;margin-top:1.25rem;padding:.75rem;border-radius:.75rem;border:1px solid #D4D4D8;background:#fff;color:#71717A;font-size:.875rem;font-weight:500;font-family:'Space Grotesk',system-ui,sans-serif;cursor:pointer}
 .reset-btn:hover{background:#F4F4F5}
-.footnote{font-size:.7rem;color:#A1A1AA;margin-top:1rem;line-height:1.6}
+.footnote{font-size:.7rem;color:#71717A;margin-top:1rem;line-height:1.6}
 .top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}
 .pmr-badge{flex-shrink:0;width:52px;height:52px;display:block}
 .pmr-badge:hover{opacity:.85}
-.share-btn{width:100%;margin-top:.6rem;padding:.75rem;border-radius:.75rem;border:1px solid #D4D4D8;background:#fff;color:#0E7490;font-size:.875rem;font-weight:600;font-family:'Space Grotesk',system-ui,sans-serif;cursor:pointer}
+.share-btn{width:100%;min-height:44px;margin-top:.6rem;padding:.75rem;border-radius:.75rem;border:1px solid #D4D4D8;background:#fff;color:#0E7490;font-size:.875rem;font-weight:600;font-family:'Space Grotesk',system-ui,sans-serif;cursor:pointer}
 .share-btn:hover{background:#E0F2FE}
 .share-btn.copied{border-color:#0E7490;background:#E0F2FE}
 .print-btn{display:flex;align-items:center;justify-content:center;gap:.5rem}
 .btn-icon{flex-shrink:0;display:block}   /* display:block removes the inline-SVG baseline gap so the icon centers on the text */
 
 /* ── Skip it ── */
-.skip-btn{font-family:'JetBrains Mono',monospace;font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:.1rem .45rem;border-radius:.375rem;border:1px solid #E4E4E7;background:#fff;color:#A1A1AA;cursor:pointer;flex-shrink:0;line-height:1.4}
+.skip-btn{font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;min-height:40px;min-width:40px;padding:.25rem .7rem;border-radius:.375rem;border:1px solid #E4E4E7;background:#fff;color:#71717A;cursor:pointer;flex-shrink:0;line-height:1.4}
 .skip-btn:hover{border-color:#DC2626;color:#DC2626;background:#FEF2F2}
 .skip-btn.active{border-color:#DC2626;color:#DC2626;background:#FEF2F2}
 .item.skipped input[type=range]{opacity:.3;pointer-events:none}
-.item.skipped .item-label{color:#A1A1AA;text-decoration:line-through}
-.item.skipped .item-val{color:#A1A1AA;text-decoration:line-through}
+.item.skipped .item-label{color:#71717A;text-decoration:line-through}
+.item.skipped .item-val{color:#71717A;text-decoration:line-through}
 .item.skipped .ticks{opacity:.5}
 
 /* ── Battery easter egg ── */
@@ -120,6 +123,16 @@ details.ws[open] .chevron{transform:rotate(180deg)}
 .go-line{font-size:.55rem;color:#FAFAFA;line-height:2.1}
 .go-hint{font-size:.5rem;color:#FDE047;margin-top:1.75rem;animation:goBlink 1s steps(1) infinite}
 @keyframes goBlink{50%{opacity:0}}
+
+/* ── Reduced motion ──
+   Honors the OS "reduce motion" setting: no transitions, no drop-in / blink / fade animations.
+   TRAP: .go-box is parked at translateY(-120vh) and only the goDrop animation brings it on screen. With
+   the animation killed it would stay off screen and the overlay would show as an empty dark page, so
+   the box is pinned to its final position here. Also see the matchMedia check on the Apply scroll. */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important}
+  .go-box{transform:none}
+}
 /* ══════════════════════════════════════════════════════════════════════════
    PRINT / PDF  —  everything that only applies on paper or "Save as PDF".
    Screen styles above are untouched; this block overrides them LAST, so same-
@@ -146,9 +159,15 @@ details.ws[open] .chevron{transform:rotate(180deg)}
 body{background:#fff;color:var(--p-ink)}
 
 /* ── Chrome that is meaningless on paper ── */
-.reset-btn,.share-btn,.ws-apply,.chevron,.bat-egg,#go-overlay,.skip-btn:not(.active){display:none!important}
+.reset-btn,.share-btn,.ws-apply,.ws-apply-note,.chevron,.bat-egg,#go-overlay,.skip-btn:not(.active){display:none!important}   /* .ws-apply-note explains a button that is hidden on paper; it also kept the footer off page 2 */
 .skip-btn.active{border:1px solid var(--p-ink2);background:#fff;color:var(--p-ink2);font-size:.75rem}
 .pmr-badge{width:44px;height:44px}
+/* Screen touch targets (40px chips, 40px-tall sliders) would bloat the page; paper doesn't need them. */
+.skip-btn,.badge-btn{min-height:0;min-width:0;padding:.1rem .45rem}
+input[type=range]{height:5px}   /* original print height; the 40px screen hit area pushed the document to 3 pages */
+.item-head{align-items:center}
+.item-chips{order:1;flex:0 0 auto;margin:0;gap:.35rem}   /* chips sit inline after the label, as before the touch-target change */
+.item-val{order:2;margin-left:auto}
 
 /* ── Layout: two columns, sections reordered so the worksheet lands last ── */
 .wrap{max-width:none;padding:0;display:grid;grid-template-columns:1fr 1fr;column-gap:.25in;align-items:start}
@@ -289,7 +308,7 @@ details.ws summary{padding:0 0 .5rem;list-style:none}
     <summary>
       <div>
         <div class="section-title">Ride Worksheet</div>
-        <div style="font-size:.72rem;color:#A1A1AA;margin-top:.1rem">Estimate replacements from how you actually ride</div>
+        <div style="font-size:.72rem;color:#71717A;margin-top:.1rem">Estimate replacements from how you actually ride</div>
       </div>
       <span class="chevron">&#9662;</span>
     </summary>
@@ -315,7 +334,7 @@ details.ws summary{padding:0 0 .5rem;list-style:none}
           <div class="ws-cell"><span class="ws-num" id="ws-sealant">-</span><span class="ws-cap">Sealant</span></div>
         </div>
         <button class="ws-apply" id="btn-apply">Apply to dials above &#8593;</button>
-        <p class="ws-note">Ballpark only &#8212; based on ~800 mi rear tire life; bike-park days weighted heavier for braking and cornering load. Tune the dials yourself after applying.</p>
+        <p class="ws-note">Ballpark only &#8212; based on ~800 mi rear tire life; bike-park days weighted heavier for braking and cornering load. <span class="ws-apply-note">Apply sets tires, pad sets, rotors, sealant (at ~$25 per refill) and the chain interval; dials cap at 7 tires, 12 pad sets and 4 rotors.</span> Tune the dials yourself after applying.</p>
       </div>
     </div>
   </details>
@@ -348,7 +367,7 @@ details.ws summary{padding:0 0 .5rem;list-style:none}
   </div>
 </div>
 
-<div id="go-overlay" role="alertdialog" aria-label="Game over — brake pads cannot be skipped">
+<div id="go-overlay" role="alertdialog" aria-modal="true" tabindex="-1" aria-label="Game over — brake pads cannot be skipped">
   <div class="go-box">
     <div class="go-title">GAME OVER</div>
     <p class="go-line">YOU TRIED TO SKIP<br>BRAKE PADS</p>
@@ -362,7 +381,7 @@ details.ws summary{padding:0 0 .5rem;list-style:none}
 var D = {
   frontSusp:135, rearSusp:150, dropper:75, pivotBearings:150,
   chain:75, cassette:175, chainring:45, batteryOn:false,
-  chainInt:24, cassetteInt:24, chainringInt:36,
+  chainInt:24, cassetteInt:24, chainringInt:36, pivotInt:24,
   chainLube:50, sealant:50,
   tireCost:75, tireQty:2,
   padCost:25, padQty:2,
@@ -379,8 +398,29 @@ var SKIPMAP = {
   tires:['tireCost','tireQty'], rotors:['rotorCost','rotorQty'],
   ancillary:['ancillary']
 };
-var INT = [12, 24, 36];
-var GMIN=400, GMAX=2600;
+var INT = [12, 24, 36];   // replacement intervals (months) the badges cycle through
+/* Slider limits per dial: [min, max, step]. This is the single source for every slider's range
+   (sliderH reads it, so the sliders cannot drift from it) AND the clamp applied to values arriving from
+   a share link or from "Apply to dials". Without the clamp a hand-edited link or an extreme worksheet
+   pushed S past the slider's end, so the label and the total disagreed with the slider thumb. */
+var LIMITS = {
+  frontSusp:[110,165,5], rearSusp:[130,200,5], dropper:[50,100,5], pivotBearings:[50,260,5],
+  chain:[50,100,5], cassette:[75,500,5], chainring:[20,100,5],
+  chainLube:[30,100,5], sealant:[25,100,5],
+  tireCost:[50,110,5], tireQty:[1,7,1], padCost:[15,50,5], padQty:[1,12,1],
+  rotorCost:[20,100,5], rotorQty:[0,4,1], ancillary:[10,500,5],
+  xcRpw:[1,7,1], xcMpr:[1,50,1], endRpw:[0,7,1], endMpr:[1,50,1],
+  parkDays:[0,50,1]   // 0 allowed: a rider who never visits a bike park
+};
+function clampKey(k,v){
+  var L=LIMITS[k]; if(!L) return v;
+  var snapped=L[0]+Math.round((v-L[0])/L[2])*L[2];   // snap to the slider's step so 52 becomes 50, not a value the thumb can't show
+  return Math.min(L[1],Math.max(L[0],snapped));
+}
+function nearestInterval(months){
+  return INT.reduce(function(best,m){ return Math.abs(m-months)<Math.abs(best-months)?m:best; }, INT[0]);
+}
+var GMIN=400, GMAX=2600;   // gauge scale in $/yr: needle sits at the left end at GMIN, right end at GMAX
 var ZONES=[{f:0,t:.4,c:'#0E7490'},{f:.4,t:.75,c:'#D97706'},{f:.75,t:1,c:'#DC2626'}];
 
 // ── Gauge ──────────────────────────────────────────────────────────────────
@@ -422,20 +462,44 @@ function updateGauge(total){
 }
 
 // ── Wear model ─────────────────────────────────────────────────────────────
+/* ---------- wear-model constants (Ride Worksheet) ----------
+   Ballpark figures, not measured data; they are calibrated to feel right for casual, typical and
+   park-rat riders. The README's "Ride Worksheet - wear model" section mirrors this list; change both. */
+var WEEKS_PER_SEASON=30;       // weeks ridden per year; turns rides/week into yearly trail miles. Raise for year-round riders
+var PARK_DAY_TRAIL_RIDES=3;    // one bike-park day counts as this many average trail rides of mileage
+var PARK_TIRE_SEVERITY=1.6;    // park miles wear tires this many times faster than trail miles (cornering load)
+var PARK_PAD_SEVERITY=2;       // ...wear brake pads this many times faster (sustained braking)
+var PARK_ROTOR_SEVERITY=1.5;   // ...wear rotors this many times faster (heat)
+var REAR_TIRE_LIFE_MI=800;     // miles per rear tire
+var FRONT_TIRE_LIFE_MI=1600;   // miles per front tire (lasts ~2x the rear); tires/yr = wear miles on each, summed
+var PAD_LIFE_MI=1000;          // miles per pad set on ONE brake; the bike has BRAKE_COUNT, so pad sets/yr = miles / this x 2
+var BRAKE_COUNT=2;             // front + rear
+var ROTOR_LIFE_MI=4000;        // miles per rotor; ROTOR_COUNT rotors wear in parallel
+var ROTOR_COUNT=2;             // front + rear
+var CHAIN_LIFE_MI=2000;        // miles per chain (well-kept / waxed ballpark). Drives chains/yr AND, on Apply, the chain interval
+var SEALANT_LIFE_MI=1200;      // miles between sealant refills...
+var MIN_SEALANT_REFILLS=2;     // ...but sealant also dries out with time, so never fewer than this per year (~every 6 months)
+var SEALANT_REFILL_COST=25;    // $ per refill. Converts refills into the sealant dial; $50 default dial = 2 refills x $25
+var DEFAULT_PARK_RIDE_MI=10;   // ride length assumed for park days if the rider has no trail rides (safety net; XC rides/wk >= 1 today)
+
+var lastSuggestions=null;      // newest result of suggestions(); "Apply to dials" reads it so it applies exactly what is on screen
+
 function suggestions(){
-  var trail=(S.xcRpw*S.xcMpr+S.endRpw*S.endMpr)*30;
+  var trailMi=(S.xcRpw*S.xcMpr+S.endRpw*S.endMpr)*WEEKS_PER_SEASON;
   var rpw=S.xcRpw+S.endRpw;
-  var avg=rpw>0?(S.xcRpw*S.xcMpr+S.endRpw*S.endMpr)/rpw:10;
-  var park=S.parkDays*3*avg;
-  var tm=trail+park*1.6;
-  var tires=Math.max(1,Math.round(tm/800+tm/1600));
-  var pm=trail+park*2;
-  var pads=Math.max(1,Math.round(pm/1000*2));
-  var rm=trail+park*1.5;
-  var rotors=Math.max(0,Math.round(rm/4000*2));
-  var sealant=Math.max(2,Math.round(tm/1200));
-  var chains=Math.max(1,Math.round(tm/2000));
-  return {mi:Math.round(trail+park), tires:tires, pads:pads, rotors:rotors, sealant:sealant, chains:chains};
+  var avgRideMi=rpw>0?(S.xcRpw*S.xcMpr+S.endRpw*S.endMpr)/rpw:DEFAULT_PARK_RIDE_MI;
+  var parkMi=S.parkDays*PARK_DAY_TRAIL_RIDES*avgRideMi;
+  var tireMi=trailMi+parkMi*PARK_TIRE_SEVERITY;   // chains and sealant use these same tire-severity miles
+  var padMi=trailMi+parkMi*PARK_PAD_SEVERITY;
+  var rotorMi=trailMi+parkMi*PARK_ROTOR_SEVERITY;
+  return {
+    mi:      Math.round(trailMi+parkMi),
+    tires:   Math.max(1,Math.round(tireMi/REAR_TIRE_LIFE_MI+tireMi/FRONT_TIRE_LIFE_MI)),
+    pads:    Math.max(1,Math.round(padMi/PAD_LIFE_MI*BRAKE_COUNT)),
+    rotors:  Math.max(0,Math.round(rotorMi/ROTOR_LIFE_MI*ROTOR_COUNT)),
+    sealant: Math.max(MIN_SEALANT_REFILLS,Math.round(tireMi/SEALANT_LIFE_MI)),
+    chains:  tireMi/CHAIN_LIFE_MI    // NOT rounded: 0.9 chains/yr means "about every 13 months", which Apply snaps to the 12-month interval
+  };
 }
 
 // ── DOM helpers ────────────────────────────────────────────────────────────
@@ -444,17 +508,20 @@ function setText(id,v){ var e=el(id); if(e) e.textContent=v; }
 function setHTML(id,v){ var e=el(id); if(e) e.innerHTML=v; }
 
 function sliderH(id,label,min,max,step,val,unit,badge,assumed,sub,intKey,skipKey){
+  var L=LIMITS[id]; if(L){ min=L[0]; max=L[1]; step=L[2]; }   // LIMITS wins over the literals passed in build()
   var disp=unit==='$'?'$'+val:val+unit;
   var dmin=unit==='$'?'$'+min:min+unit;
   var dmax=unit==='$'?'$'+max:max+unit;
-  var bHTML='';
+  // Plain badge stays beside the label. The clickable chips (interval badge, skip) are 40px touch targets,
+  // so on screen they get their own row under the label instead of squeezing the label and price (print puts them back inline).
+  var bHTML='', chips='';
   if(badge && intKey){
-    bHTML='<button class="badge badge-btn" id="ib-'+intKey+'" data-ikey="'+intKey+'">'+badge+' &#10227;</button>';
+    chips='<button class="badge badge-btn" id="ib-'+intKey+'" data-ikey="'+intKey+'">'+badge+' &#10227;</button>';
   } else if(badge){
     bHTML='<span class="badge'+(assumed?' badge-a':'')+'">'+badge+(assumed?'*':'')+'</span>';
   }
   if(skipKey){
-    bHTML+='<button class="skip-btn" data-skip="'+skipKey+'" aria-pressed="false">skip it</button>';
+    chips+='<button class="skip-btn" data-skip="'+skipKey+'" aria-pressed="false">skip it</button>';
   }
   return '<div class="item" id="item-'+id+'">'+
     '<div class="item-head">'+
@@ -462,6 +529,7 @@ function sliderH(id,label,min,max,step,val,unit,badge,assumed,sub,intKey,skipKey
         '<label for="r-'+id+'" class="item-label">'+label+'</label>'+bHTML+
       '</div>'+
       '<span id="v-'+id+'" class="item-val">'+disp+'</span>'+
+      (chips?'<div class="item-chips">'+chips+'</div>':'')+
     '</div>'+
     '<input type="range" id="r-'+id+'" data-key="'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'">'+
     '<div class="ticks"><span>'+dmin+'</span><span id="s-'+id+'">'+sub+'</span><span>'+dmax+'</span></div>'+
@@ -472,12 +540,12 @@ function sliderH(id,label,min,max,step,val,unit,badge,assumed,sub,intKey,skipKey
 function build(){
   el('sec-susp').innerHTML=
     '<div class="section-head"><h2 class="section-title">Suspension &amp; Pivots</h2><span class="section-total" id="t-susp"></span></div>'+
-    '<p class="section-sub">Intervals assumed &#8212; see note below</p>'+
+    '<p class="section-sub">Click the pivot badge to cycle 12 / 24 / 36 mo</p>'+
     '<div class="divide">'+
       sliderH('frontSusp','Front suspension service',110,165,5,S.frontSusp,'$','Annual',true,'','','frontSusp')+
       sliderH('rearSusp','Rear suspension service',130,200,5,S.rearSusp,'$','Annual',true,'','','rearSusp')+
       sliderH('dropper','Dropper service',50,100,5,S.dropper,'$','Annual',true,'','','dropper')+
-      sliderH('pivotBearings','Suspension pivot bearings',50,260,5,S.pivotBearings,'$','24 mo',true,'','','pivotBearings')+
+      sliderH('pivotBearings','Suspension pivot bearings',50,260,5,S.pivotBearings,'$',S.pivotInt+' mo',false,'','pivotInt','pivotBearings')+
     '</div>';
 
   el('sec-dt').innerHTML=
@@ -531,7 +599,7 @@ function build(){
     sliderH('endMpr','Miles per ride',1,50,1,S.endMpr,' mi','',false,S.endMpr+' mi/ride');
 
   el('ws-park').innerHTML=
-    sliderH('parkDays','Bike park days this season',1,50,1,S.parkDays,' days','',false,'counts ~3x trail wear');
+    sliderH('parkDays','Bike park days this season',0,50,1,S.parkDays,' days','',false,'counts ~'+PARK_DAY_TRAIL_RIDES+'x trail wear');
 }
 
 // ── Update display ─────────────────────────────────────────────────────────
@@ -540,7 +608,7 @@ function update(){
     frontSusp: S.frontSusp,
     rearSusp:  S.rearSusp,
     dropper:   S.dropper,
-    pivots:    S.pivotBearings/2,
+    pivots:    S.pivotBearings/(S.pivotInt/12),
     chain:     S.chain/(S.chainInt/12),
     cassette:  S.cassette/(S.cassetteInt/12),
     chainring: S.chainring/(S.chainringInt/12),
@@ -619,9 +687,9 @@ function update(){
   var sg=suggestions();
   setText('ws-miles',sg.mi.toLocaleString()+' mi-equiv/yr');
   setText('ws-tires',sg.tires); setText('ws-pads',sg.pads);
-  setText('ws-rotors',sg.rotors); setText('ws-chains',sg.chains);
+  setText('ws-rotors',sg.rotors); setText('ws-chains',sg.chains.toFixed(1));   // chains/yr to one decimal; the others are whole parts
   setText('ws-sealant',sg.sealant);
-  document._sg=sg;
+  lastSuggestions=sg;
 }
 
 // ── Events ─────────────────────────────────────────────────────────────────
@@ -646,18 +714,27 @@ function syncSkip(key){
 var lastPadBtn=null;
 function gameOver(btn){
   lastPadBtn=btn;
-  el('go-overlay').classList.add('show');
+  var o=el('go-overlay');
+  o.classList.add('show');
   document.body.style.overflow='hidden';
+  o.focus();   // move focus into the dialog so keyboard users land on it (and Escape/Enter reach the handler below)
 }
 function dismissGameOver(){
   el('go-overlay').classList.remove('show');
   document.body.style.overflow='';
   if(lastPadBtn){
     var b=lastPadBtn; lastPadBtn=null;
+    b.focus();   // hand focus back to the button that opened the overlay
     b.textContent='nice try';
     setTimeout(function(){ b.textContent='skip it'; }, 2000);
   }
 }
+// Keyboard: Escape / Enter / Space dismiss the overlay; Tab is held so focus cannot wander behind it.
+document.addEventListener('keydown', function(e){
+  if(!el('go-overlay').classList.contains('show')) return;
+  if(e.key==='Escape'||e.key==='Enter'||e.key===' '){ e.preventDefault(); dismissGameOver(); }
+  else if(e.key==='Tab'){ e.preventDefault(); }
+});
 
 document.addEventListener('click', function(e){
   var t=e.target;
@@ -691,23 +768,31 @@ document.addEventListener('click', function(e){
     S.batteryOn=!S.batteryOn;
     bat.classList.toggle('on',S.batteryOn);
     bat.setAttribute('aria-pressed',S.batteryOn);
-    var egg=el('bat-egg'); if(egg) egg.classList.add('show');
+    var egg=el('bat-egg'); if(egg) egg.classList.toggle('show',S.batteryOn);   // only while the battery is ON
     update(); return;
   }
 
   // Apply worksheet
   if(t.id==='btn-apply'){
-    var sg=document._sg||suggestions();
-    S.tireQty=sg.tires; S.padQty=sg.pads; S.rotorQty=sg.rotors;
-    ['tires','rotors'].forEach(function(k){
+    // All five worksheet results land on a dial. Each is clamped to its slider's range (see LIMITS).
+    var sg=lastSuggestions||suggestions();
+    S.tireQty=clampKey('tireQty',sg.tires);
+    S.padQty=clampKey('padQty',sg.pads);
+    S.rotorQty=clampKey('rotorQty',sg.rotors);
+    S.sealant=clampKey('sealant',sg.sealant*SEALANT_REFILL_COST);   // refills -> dollars
+    S.chainInt=nearestInterval(12/sg.chains);                        // chains/yr -> replacement interval in months
+    // A skipped item would zero out the freshly applied number, so un-skip everything we just set.
+    ['tires','rotors','chain','sealant'].forEach(function(k){
       if(SKIP[k]){ SKIP[k]=false; syncSkip(k); }
     });
-    ['tireQty','padQty','rotorQty'].forEach(function(k){
+    ['tireQty','padQty','rotorQty','sealant'].forEach(function(k){
       var r=el('r-'+k); if(r) r.value=S[k];
     });
+    var ib=el('ib-chainInt'); if(ib) ib.innerHTML=S.chainInt+' mo &#10227;';
     update();
     var ws=document.querySelector('details.ws'); if(ws) ws.open=false;
-    window.scrollTo({top:0,behavior:'smooth'});
+    var reduceMotion=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'});
     return;
   }
 
@@ -717,7 +802,7 @@ document.addEventListener('click', function(e){
     document.querySelectorAll('input[data-key]').forEach(function(r){
       if(S[r.dataset.key]!==undefined) r.value=S[r.dataset.key];
     });
-    ['chainInt','cassetteInt','chainringInt'].forEach(function(k){
+    ['chainInt','cassetteInt','chainringInt','pivotInt'].forEach(function(k){
       var b=el('ib-'+k); if(b) b.innerHTML=S[k]+' mo &#10227;';
     });
     var bat=el('btn-bat');
@@ -731,17 +816,31 @@ document.addEventListener('click', function(e){
 // ── Init ───────────────────────────────────────────────────────────────────
 var STATE_KEYS=['frontSusp','rearSusp','dropper','pivotBearings','chain','cassette','chainring',
   'chainInt','cassetteInt','chainringInt','chainLube','sealant','tireCost','tireQty',
-  'padCost','padQty','rotorCost','rotorQty','ancillary','xcRpw','xcMpr','endRpw','endMpr','parkDays'];
+  'padCost','padQty','rotorCost','rotorQty','ancillary','xcRpw','xcMpr','endRpw','endMpr','parkDays',
+  'pivotInt'];   // ORDER IS THE SHARE-LINK FORMAT: only ever append new keys at the end, or every link already shared decodes wrong
 var SKIP_KEYS=Object.keys(SKIPMAP);
 
+/* Share links live in the URL HASH (#s=...), not the query string. The PMR wrapper page forwards the
+   outer page's hash into this iframe but drops the query string, so a ?s= link opened on
+   postmillenniumrenaissance.com/maintenance/ silently loaded the defaults. Old ?s= links (github.io) still work. */
+var SHARE_BASE_URL='https://www.postmillenniumrenaissance.com/maintenance/';   // links always point at the PMR page, not the bare github.io frame
+function readSharedState(){
+  var m=/[#&]s=([^&]*)/.exec(window.location.hash);
+  if(m){ try{ return decodeURIComponent(m[1]); }catch(err){ return null; } }
+  return new URLSearchParams(window.location.search).get('s');
+}
+
 function loadFromURL(){
-  var qs=new URLSearchParams(window.location.search);
-  var v=qs.get('s');
+  var v=readSharedState();
   if(!v) return;
   var parts=v.split('.');
   var vals=(parts[0]||'').split(',');
   STATE_KEYS.forEach(function(k,i){
-    if(vals[i]!==undefined && vals[i]!=='') S[k]=Number(vals[i]);
+    if(vals[i]===undefined || vals[i]==='') return;
+    var n=Number(vals[i]);
+    if(!isFinite(n)) return;                           // junk like "abc" -> keep the default instead of $NaN
+    if(/Int$/.test(k)){ if(INT.indexOf(n)>=0) S[k]=n; }   // interval badges accept only 12 / 24 / 36
+    else S[k]=clampKey(k,n);                           // dials are clamped + snapped to their slider
   });
   if(parts[1]==='1') S.batteryOn=true;
   var skipBits=parts[2]||'';
@@ -753,10 +852,7 @@ function buildShareURL(){
   var bat=S.batteryOn?'1':'0';
   var skipBits=SKIP_KEYS.map(function(k){ return SKIP[k]?'1':'0'; }).join('');
   var s=vals+'.'+bat+'.'+skipBits;
-  var url=new URL(window.location.href);
-  url.search='';
-  url.searchParams.set('s',s);
-  return url.toString();
+  return SHARE_BASE_URL+'#s='+s;
 }
 
 document.addEventListener('click', function(e){
