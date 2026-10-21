@@ -105,6 +105,24 @@ These are ballpark figures, not measured data. They're calibrated to feel reason
 
 ---
 
+## Color schemes
+
+The swatch-book icon button (top right, next to the PMR badge) cycles through three color schemes. The choice is saved in the browser (`localStorage`, preference only; the tool works without it).
+
+| # | Id | Look |
+|---|---|---|
+| 1 (default) | `day` | Day paper (`#ECEAE4`) with the PMR *day-1927-74141* texture (two layers, teal ink) |
+| 2 | `classic` | The original look: neutral `#FAFAFA` page, no texture |
+| 3 | `fisher` | Spring paper (`#E6EBE4`) with the *fisher-1882-13110* and *fisher-1882-13109* textures |
+
+Only page chrome changes. Cards, controls and every chart / gauge color are the same in all three, because those colors carry meaning and were contrast-checked on white. The texture masks load from `postmillenniumrenaissance.com/textures/masks/`, so they appear only when the page is served from the web (not opened as a local file), and they are hidden when printing.
+
+**Credits** (shown in the footer while the matching scheme is active): the patterns are adapted from US Design Patents No. 74,141 (Harry S. Day, 1927), No. 13,110 (John Fisher, 1882) and No. 13,109 (Edwin Fisher, 1882); the patents have long expired.
+
+**Adding a scheme:** one entry in the `THEMES` registry plus one `[data-theme]` block under *COLOR SCHEMES* in the CSS. The default scheme's block must stay first (it carries the bare `:root`).
+
+---
+
 ## 5-year outlook
 
 The headline number is **annualized**: a $175 cassette on a 24-month interval counts as $87.50 a year. Real cash is lumpier, so the chart shows both views of the next five years:
